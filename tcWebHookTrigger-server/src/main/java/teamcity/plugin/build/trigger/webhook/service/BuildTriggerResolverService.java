@@ -8,11 +8,15 @@ import jetbrains.buildServer.buildTriggers.BuildTriggerDescriptor;
 import jetbrains.buildServer.serverSide.ProjectManager;
 import jetbrains.buildServer.serverSide.SBuildType;
 import jetbrains.buildServer.serverSide.auth.AccessDeniedException;
+import teamcity.plugin.build.trigger.webhook.Constants;
+import teamcity.plugin.build.trigger.webhook.Loggers;
 import teamcity.plugin.build.trigger.webhook.exception.BuildTypeNotFoundException;
 import teamcity.plugin.build.trigger.webhook.exception.PermissionedDeniedException;
 
 public class BuildTriggerResolverService {
 	
+	private static final String LOGGING_PREFIX = Constants.PLUGIN_NAME + "-" + BuildTriggerResolverService.class.getSimpleName();
+
 	private ProjectManager myProjectManager;
 
 	public BuildTriggerResolverService(ProjectManager projectManager) {
@@ -21,11 +25,15 @@ public class BuildTriggerResolverService {
 	
 	public TriggersHolder findTriggersForBuildType(String buildTypeExternalId) throws BuildTypeNotFoundException, PermissionedDeniedException {
 		try {
+			Loggers.ACTIVITIES.debug(String.format("%s: Starting to look for SBuildType. buildType='%s'", LOGGING_PREFIX, buildTypeExternalId));
 			SBuildType sBuildType = myProjectManager.findBuildTypeByExternalId(buildTypeExternalId);
+			Loggers.ACTIVITIES.debug(String.format("%s: Completed looking for SBuildType. buildType='%s', found=%s", LOGGING_PREFIX, buildTypeExternalId, sBuildType != null));
 			if (sBuildType == null) {
 				throw new BuildTypeNotFoundException(buildTypeExternalId);
 			}
+			Loggers.ACTIVITIES.debug(String.format("%s: Starting to look for SBuildType's triggers. buildType='%s'", LOGGING_PREFIX, buildTypeExternalId));
 			Collection<BuildTriggerDescriptor> buildTriggers = sBuildType.getBuildTriggersCollection();
+			Loggers.ACTIVITIES.debug(String.format("%s: Completed looking for SBuildType's triggers. buildType='%s', triggerCount=%s", LOGGING_PREFIX, buildTypeExternalId, buildTriggers.size()));
 			return new TriggersHolder(sBuildType,buildTriggers.stream()
 					.filter(trigger -> WebHookBuildTriggerService.WEBHOOK_BUILD_TRIGGER_NAME.equals(trigger.getBuildTriggerService().getName()))
 					.collect(Collectors.toList()));

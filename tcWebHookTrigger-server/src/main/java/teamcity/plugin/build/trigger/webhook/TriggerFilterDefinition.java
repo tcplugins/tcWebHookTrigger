@@ -2,9 +2,16 @@ package teamcity.plugin.build.trigger.webhook;
 
 public class TriggerFilterDefinition {
 	
+	String name;
 	String template;
 	String regex;
 	
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
 	public String getTemplate() {
 		return template;
 	}
@@ -18,7 +25,8 @@ public class TriggerFilterDefinition {
 		this.regex = validatorRegex;
 	}
 	public boolean isPopulated() {
-		return     template != null
+		return     name != null
+				&& template != null
 				&& regex != null
 			;
 	}

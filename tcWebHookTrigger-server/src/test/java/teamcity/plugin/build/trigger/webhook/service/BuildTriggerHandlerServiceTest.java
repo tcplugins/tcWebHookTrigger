@@ -7,9 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import org.junit.Before;
@@ -28,9 +26,7 @@ import jetbrains.buildServer.serverSide.BuildPromotion;
 import jetbrains.buildServer.serverSide.SBuildType;
 import jetbrains.buildServer.serverSide.SQueuedBuild;
 import jetbrains.buildServer.users.SUser;
-import teamcity.plugin.build.trigger.webhook.TriggerParameterDefinition;
 import teamcity.plugin.build.trigger.webhook.TriggerParameters;
-import teamcity.plugin.build.trigger.webhook.TriggerUtils;
 import teamcity.plugin.build.trigger.webhook.parser.JsonToPropertiesParser;
 import teamcity.plugin.build.trigger.webhook.service.BuildTriggerResolverService.TriggersHolder;
 
@@ -38,6 +34,7 @@ import teamcity.plugin.build.trigger.webhook.service.BuildTriggerResolverService
 public class BuildTriggerHandlerServiceTest {
 
 	private static final String TEST_DEFINITION_01 = "name=foo::required=true::defaultValue=bar::path=$.foo.bar";
+	private static final String TEST_DEFINITION_02 = "name=branch::required=true::path=$.project.branch";
 
 	@Mock
 	BuildTriggerResolverService buildTriggerResolverService;
@@ -67,8 +64,6 @@ public class BuildTriggerHandlerServiceTest {
 	
 	private static final String testJsonString = "{ 'project' : { 'branch' : 'main' } } }";
 	
-	private List<TriggerParameterDefinition> testDefinitions;
-	
 	@Before
 	public void setup() {
 		when(buildPromotion.addToQueue(anyString())).thenReturn(sQueuedBuild);
@@ -76,7 +71,6 @@ public class BuildTriggerHandlerServiceTest {
 		when(buildCustomizer.createPromotion()).thenReturn(buildPromotion);
 		when(triggerDescriptor.getId()).thenReturn(UUID.randomUUID().toString());
 		when(triggerDescriptor.getTriggerName()).thenReturn(WebHookBuildTriggerService.WEBHOOK_BUILD_TRIGGER_NAME);
-		testDefinitions = TriggerUtils.toDefinitions(TEST_DEFINITION_01);
 	}
 	
 	@Test
@@ -109,9 +103,10 @@ public class BuildTriggerHandlerServiceTest {
 	@Test
 	public void testCallsBuildCustomizerFactoryWhenTriggersAreFoundAndFiltersMatch() throws Exception {
 		String buildTypeExternalId = "MyTestBuildId";
+		jsonToPropertiesParser = new JsonToPropertiesParser();
 		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
-				TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_01,
-				TriggerParameters.FILTERS, "template=${branch}::regex=\\s"));
+				TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_02,
+				TriggerParameters.FILTERS, "name=branch::template=${branch}::regex=\\w+"));
 		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, currentUser)).thenReturn(buildCustomizer);
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
 		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
@@ -119,13 +114,11 @@ public class BuildTriggerHandlerServiceTest {
 		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(currentUser));
 	}
 	@Test
-	@Ignore
 	public void testDoesNotCallBuildCustomizerFactoryWhenTriggersAreFoundButFiltersDontMatch() throws Exception {
 		String buildTypeExternalId = "MyTestBuildId";
 		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
 				TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_01,
-				TriggerParameters.FILTERS, "template=${branch}::regex=\\s"));
-		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, currentUser)).thenReturn(buildCustomizer);
+				TriggerParameters.FILTERS, "name=branch::template=${branch}::regex=\\s+"));
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
 		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, testJsonString);

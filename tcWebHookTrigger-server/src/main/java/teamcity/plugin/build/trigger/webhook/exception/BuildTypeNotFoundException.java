@@ -1,5 +1,7 @@
 package teamcity.plugin.build.trigger.webhook.exception;
 
+import javax.servlet.http.HttpServletResponse;
+
 public class BuildTypeNotFoundException extends WebException {
 	private static final long serialVersionUID = -6584921927732186846L;
 
@@ -9,8 +11,7 @@ public class BuildTypeNotFoundException extends WebException {
 
 	@Override
 	public int getStatusCode() {
-		// TODO Auto-generated method stub
-		return 0;
+		return HttpServletResponse.SC_NOT_FOUND;
 	}
 
 

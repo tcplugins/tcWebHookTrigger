@@ -20,7 +20,7 @@ public class TriggerUtils {
 	public static final String PARAM_REGEX = "regex";
 	
 	private static final String[] PATH_PARAMS = { PARAM_NAME, PARAM_XPATH, PARAM_DEFAULTVALUE, PARAM_REQUIRED };
-	private static final String[] TRIGGER_PARAMS = { PARAM_TEMPLATE, PARAM_REGEX };
+	private static final String[] TRIGGER_PARAMS = { PARAM_NAME, PARAM_TEMPLATE, PARAM_REGEX };
 	
 	public static List<TriggerParameterDefinition> toDefinitions(String pathMappingsStr) {
 		List<TriggerParameterDefinition> triggerParameterDefinitions = new ArrayList<>();
@@ -74,7 +74,7 @@ public class TriggerUtils {
 				if (definition.isPopulated()) {
 					triggerFilterDefinitions.add(definition);
 				} else {
-					throw new MalformedTriggerDefinitionException(String.format("TriggerFilterDefinition looks malformed: '%s'", line));
+					throw new MalformedTriggerDefinitionException(String.format("TriggerFilterDefinition looks malformed or incomplete. Please specify 'name','template' and 'regex' values. Provided string was: '%s'", line));
 				}
 			}
 			

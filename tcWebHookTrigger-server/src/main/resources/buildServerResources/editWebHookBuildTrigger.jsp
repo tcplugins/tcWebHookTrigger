@@ -17,7 +17,6 @@
 <%@ include file="/include.jsp" %>
 <%@ page import="teamcity.plugin.build.trigger.webhook.TriggerParameters" %>
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
-<jsp:useBean id="propertiesBean" type="jetbrains.buildServer.controllers.BasePropertiesBean" scope="request"/>
 
 <tr class="noBorder" >
     <td colspan="2">
@@ -30,15 +29,13 @@
     <td>
      <c:set var="note_paths">Newline-delimited set of path mappings. e.g. name=foo::path=$.foo.bar::required=true::defaultValue=bar</c:set>
      <props:multilineProperty name="<%=TriggerParameters.PATH_MAPPINGS%>" linkTitle="Edit Path Mappings" cols="35" rows="3" note="${note_paths}"/>
-        <span class="error" id="error_<%=TriggerParameters.PATH_MAPPINGS%>"></span>
     </td>
 </tr>
 <tr class="noBorder" >
-    <th><label for="<%=TriggerParameters.FILTERS%>">Filters: <l:star/></label></th>
+    <th><label for="<%=TriggerParameters.FILTERS%>">Filters:</label></th>
     <td>
-     <c:set var="note_filters">Newline-delimited set of filter. e.g. template=\$\{branch\}::regex=\s</c:set>
+     <c:set var="note_filters">Newline-delimited set of filter. e.g. name=branch::template=\$\{branch\}::regex=\s</c:set>
      <props:multilineProperty name="<%=TriggerParameters.FILTERS%>" linkTitle="Edit Filters" cols="35" rows="3" note="${note_filters}"/>
-        <span class="error" id="error_<%=TriggerParameters.FILTERS%>"></span>
     </td>
 </tr>
 
