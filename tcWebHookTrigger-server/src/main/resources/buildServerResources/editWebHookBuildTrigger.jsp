@@ -44,7 +44,7 @@
     <td>
        <props:checkboxProperty name="<%=TriggerParameters.INCLUDE_WHOLE_PAYLOAD%>"/>
       <span class="smallNote">
-          Whether to define a build parameter named 'payload', that includes the whole webhook payload.
+          Whether to define a build parameter named 'payload', that includes the whole webhook payload. <b><i>TODO: Not implemented yet.</i></b>
       </span>
         <span class="error" id="error_<%=TriggerParameters.INCLUDE_WHOLE_PAYLOAD%>"></span>
     </td>
