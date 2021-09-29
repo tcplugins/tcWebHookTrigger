@@ -6,8 +6,10 @@ import java.util.Map;
 
 import com.jayway.jsonpath.InvalidJsonException;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 
 import teamcity.plugin.build.trigger.webhook.Constants;
+import teamcity.plugin.build.trigger.webhook.Loggers;
 import teamcity.plugin.build.trigger.webhook.TriggerParameterDefinition;
 import teamcity.plugin.build.trigger.webhook.exception.UnparsablePayloadException;
 
@@ -17,16 +19,18 @@ public class JsonToPropertiesParser {
 
 	
 	public Map<String, String> parse(List<TriggerParameterDefinition> parameterDefinitions, String jsonString) {
-		Map<String,String> parameters = new HashMap<>();
+		Map<String,String> resolvedParameters = new HashMap<>();
 		parameterDefinitions.forEach(definition -> {
 			try {
 				String value = JsonPath.read(jsonString, definition.getPath());
-				parameters.put(definition.getName(), value);
+				resolvedParameters.put(definition.getName(), value);
 			} catch (InvalidJsonException ex) {
 				throw new UnparsablePayloadException(ex);
+			} catch (PathNotFoundException ex) {
+				Loggers.ACTIVITIES.debug(String.format("%s: Path not found in payload. name='%s', path='%s'", LOGGING_PREFIX, definition.getName(), definition.getPath()));
 			}
 		});
-		return parameters;
+		return resolvedParameters;
 	}
 
 }
