@@ -17,7 +17,7 @@ Example webhook payload.
   "project" : {
     "name" : "foo",
     "branch_name" : "bugfix/12345-fix-indenting",
-    "ticket_number" : 12345,
+    "ticket_number" : "12345",
     "ticket_title" : "Fix indenting on Application.java source code",
     "ticket_state" : "Approved"
   }
@@ -72,7 +72,7 @@ For the above example payload and example configuration, the build would be trig
 1. The value found at `$.project.ticket_number` would be assigned to the variable `ticket_number`. It is required, so the value must be present in the payload.
 1. A new filter variable will be created called `branch` from the value of the variable called `branch`. This value is then validated against the regular expression `[\w\/-]+`.
 1. A new filter variable will be created called `ticket_state_is_approved` from the variable called `ticket_state`. This value is validated against the regular expression `Approved`.
-1. A new filter variable will be created called `ticket_number_desc` from the template `ticket-#${ticket_number}`. This value is validated against the regular expression `ticket_#\d+`. It will result in a variable called `ticket_number_desc` containing the value `ticket-#12345`.
+1. A new filter variable will be created called `ticket_number_desc` from the template `ticket-#${ticket_number}`. This value is validated against the regular expression `ticket-#\d+`. It will result in a variable called `ticket_number_desc` containing the value `ticket-#12345`.
 1. The following build parameters will be defined and passed to the build.
 
 | Name | Value |
