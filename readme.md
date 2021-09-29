@@ -106,7 +106,7 @@ In TeamCity, triggers are configured on a build configuration.
 The WebHook Trigger endpoint is installed in TeamCity by this plugin. The location is <i><teamcity_root_url></i>/app/webhook-trigger/<i>BuildConfigId</i>.
 This endpoint is authenticated by TeamCity so the easiest way to allow the WebHook Sender to authenticate is to prepend `/httpAuth` to the URL and send basic authentication credentials. Then the webhook trigger URL becomes <i><teamcity_root_url></i>/httpAuth/app/webhook-trigger/<i>BuildConfigId</i>
 
-See also issue #5 for progress on bearer authentication. 
+See also [issue #5](https://github.com/tcplugins/tcWebHookTrigger/issues/5) for progress on Bearer authentication. 
 
 ###### Example logging
 
