@@ -45,8 +45,8 @@ There are four keys for which values can be assigned.
 | -----| ----- | ----------- |
 | name | Specifies the name of the variable to be defined. | Yes |
 | path | The json-path specification determining how to find the value in the webhook payload | Yes |
-| required | Determines if the path must be found in the document. If required, and not found, the build will not be triggered |
-| defaultValue | A default value to use if the path is not found | 
+| required | Determines if the path must be found in the document. If required, and not found, the build will not be triggered | No |
+| defaultValue | A default value to use if the path is not found | No |
 
 ##### Filters (optional)
 Filters are define one per line with key/value pairs seperated by double colon `::`
