@@ -1,7 +1,7 @@
 package teamcity.plugin.build.trigger.webhook;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.collection.IsEmptyCollection.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
@@ -14,13 +14,12 @@ public class TriggerUtilsTest {
 	@Test
 	public void testToDefinitionsWithEmptyString() {
 		List<TriggerParameterDefinition> definitions = TriggerUtils.toDefinitions(null);
-		assertThat(definitions, empty());
+		assertTrue(definitions.isEmpty());
 	}
 	
 	@Test(expected=MalformedTriggerDefinitionException.class)
 	public void testToDefinitionsWithMalformedString() {
-		List<TriggerParameterDefinition> definitions = TriggerUtils.toDefinitions("testString");
-		assertThat(definitions, empty());
+		TriggerUtils.toDefinitions("testString");
 	}
 	
 	@Test

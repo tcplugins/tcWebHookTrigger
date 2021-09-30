@@ -44,13 +44,6 @@
 	    <version>1.9.4</version>
 	</dependency>
 
-    <dependency>
-      <groupId>org.jetbrains.teamcity</groupId>
-      <artifactId>tests-support</artifactId>
-      <version>${teamcity-version}</version>
-      <scope>test</scope>
-    </dependency>
-
 	<dependency>
 		<groupId>junit</groupId>
 		<artifactId>junit</artifactId>
