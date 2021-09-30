@@ -22,7 +22,7 @@ public class JsonToPropertiesParser {
 		Map<String,String> resolvedParameters = new HashMap<>();
 		parameterDefinitions.forEach(definition -> {
 			try {
-				String value = JsonPath.read(jsonString, definition.getPath());
+				String value = convertObject(JsonPath.read(jsonString, definition.getPath()));
 				resolvedParameters.put(definition.getName(), value);
 			} catch (InvalidJsonException ex) {
 				throw new UnparsablePayloadException(ex);
@@ -31,6 +31,14 @@ public class JsonToPropertiesParser {
 			}
 		});
 		return resolvedParameters;
+	}
+
+
+	private String convertObject(Object read) {
+		if (read == null) {
+			return null;
+		}
+		return String.valueOf(read);
 	}
 
 }
