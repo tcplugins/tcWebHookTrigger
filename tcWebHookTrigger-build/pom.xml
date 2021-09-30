@@ -11,8 +11,8 @@
   <properties>
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
       <teamcity.tcWebHookTrigger.plugin.version>snapshot-${maven.build.timestamp}</teamcity.tcWebHookTrigger.plugin.version>
-      <teamcity.tcChatBot.plugin.vendorName>Net Wolf</teamcity.tcChatBot.plugin.vendorName>
-      <teamcity.tcChatBot.plugin.vendorUrl>http://netwolfuk.wordpress.com/teamcity-plugins/</teamcity.tcChatBot.plugin.vendorUrl>
+      <teamcity.tcWebHookTrigger.plugin.vendorName>Net Wolf</teamcity.tcWebHookTrigger.plugin.vendorName>
+      <teamcity.tcWebHookTrigger.plugin.vendorUrl>http://netwolfuk.wordpress.com/teamcity-plugins/</teamcity.tcWebHookTrigger.plugin.vendorUrl>
   </properties>
   <dependencies>
       <dependency>

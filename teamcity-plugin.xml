@@ -2,11 +2,11 @@
 <teamcity-plugin xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:schemas-jetbrains-com:teamcity-plugin-v1-xml">
   <info>
     <name>tcWebHookTrigger</name>
-    <display-name>tcWebHookTrigger</display-name>
+    <display-name>Generic WebHook Build Trigger</display-name>
     <version>@Version@</version>
-    <description>Plugin description</description>
+    <description>Trigger a build from incoming webhook request</description>
     <download-url>Plugin download URL</download-url>
-    <email>Plugin author e-mail</email>
+    <email>netwolfuk+tcWebHookTrigger+teamcity+plugins@gmail.com</email>
     <vendor>
       <name>@VendorName@</name>
       <url>@VendorURL@</url>
