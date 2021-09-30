@@ -1,5 +1,6 @@
 package teamcity.plugin.build.trigger.webhook.service;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,10 @@ public class BuildTriggerHandlerService {
 				
 				// Populate the parameters from the payload.
 				buildCustomiser.setParameters(valuesHolder.getAllResolvedValues());
+				
+				if (Boolean.parseBoolean(trigger.getProperties().get(TriggerParameters.INCLUDE_WHOLE_PAYLOAD))) {
+					buildCustomiser.setParameters(Collections.singletonMap("payload", payload));
+				}
 				
 				// Look for a trigger named "branch". If defined, build that branch.
 				if (valuesHolder.getResolvedTriggers().containsKey(Constants.BRANCH_NAME_KEYWORD)) {

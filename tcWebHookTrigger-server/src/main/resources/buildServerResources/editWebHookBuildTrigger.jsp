@@ -34,7 +34,7 @@
 <tr class="noBorder" >
     <th><label for="<%=TriggerParameters.FILTERS%>">Filters:</label></th>
     <td>
-     <c:set var="note_filters">Newline-delimited set of filter. e.g. name=branch::template=\$\{branch\}::regex=\s</c:set>
+     <c:set var="note_filters">Newline-delimited set of filters. e.g. name=branch::template=\${foo}::regex=\w</c:set>
      <props:multilineProperty name="<%=TriggerParameters.FILTERS%>" linkTitle="Edit Filters" cols="35" rows="3" note="${note_filters}"/>
     </td>
 </tr>
@@ -44,7 +44,7 @@
     <td>
        <props:checkboxProperty name="<%=TriggerParameters.INCLUDE_WHOLE_PAYLOAD%>"/>
       <span class="smallNote">
-          Whether to define a build parameter named 'payload', that includes the whole webhook payload. <b><i>TODO: Not implemented yet.</i></b>
+          Whether to define a build parameter named 'payload', that includes the whole webhook payload.
       </span>
         <span class="error" id="error_<%=TriggerParameters.INCLUDE_WHOLE_PAYLOAD%>"></span>
     </td>
