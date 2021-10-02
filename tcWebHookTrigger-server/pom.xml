@@ -4,7 +4,7 @@
   <parent>
     <artifactId>tcWebHookTrigger</artifactId>
     <groupId>netwolfuk.teamcity.plugins</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.2</version>
   </parent>
   <artifactId>tcWebHookTrigger-server</artifactId>
   <packaging>jar</packaging>

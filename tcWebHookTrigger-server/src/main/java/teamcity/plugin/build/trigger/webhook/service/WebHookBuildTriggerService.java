@@ -16,6 +16,7 @@ import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
 import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
+import teamcity.plugin.build.trigger.webhook.Constants;
 import teamcity.plugin.build.trigger.webhook.TriggerParameters;
 import teamcity.plugin.build.trigger.webhook.TriggerUtils;
 import teamcity.plugin.build.trigger.webhook.controller.TriggerController;
@@ -41,7 +42,7 @@ public class WebHookBuildTriggerService extends BuildTriggerService {
 
 	@Override
 	public String getDisplayName() {
-		return "WebHook Listening build trigger";
+		return Constants.PLUGIN_DESCRIPTION;
 	}
 
 	@Override

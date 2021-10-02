@@ -84,7 +84,7 @@ public class BuildTriggerHandlerService {
 				}
 				
 				// Now queue the build, and set a comment that says we triggered it.
-				SQueuedBuild queuedBuild = buildCustomiser.createPromotion().addToQueue("Webhook Build Trigger");
+				SQueuedBuild queuedBuild = buildCustomiser.createPromotion().addToQueue(Constants.PLUGIN_DESCRIPTION);
 				Loggers.ACTIVITIES.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId()));
 			} else {
 				Loggers.ACTIVITIES.info(String.format("%s: Build not queued by Webhook Trigger processing. Trigger filters did not match webhook payload content. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));

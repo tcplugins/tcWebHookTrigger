@@ -4,13 +4,13 @@
   <parent>
     <artifactId>tcWebHookTrigger</artifactId>
     <groupId>netwolfuk.teamcity.plugins</groupId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.2</version>
   </parent>
   <artifactId>tcWebHookTrigger-build</artifactId>
   <packaging>pom</packaging>
   <properties>
       <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
-      <teamcity.tcWebHookTrigger.plugin.version>snapshot-${maven.build.timestamp}</teamcity.tcWebHookTrigger.plugin.version>
+      <teamcity.tcWebHookTrigger.plugin.version>${project.version} (${maven.build.timestamp})</teamcity.tcWebHookTrigger.plugin.version>
       <teamcity.tcWebHookTrigger.plugin.vendorName>Net Wolf</teamcity.tcWebHookTrigger.plugin.vendorName>
       <teamcity.tcWebHookTrigger.plugin.vendorUrl>http://netwolfuk.wordpress.com/teamcity-plugins/</teamcity.tcWebHookTrigger.plugin.vendorUrl>
   </properties>
@@ -18,7 +18,7 @@
       <dependency>
            <groupId>netwolfuk.teamcity.plugins</groupId>
            <artifactId>tcWebHookTrigger-server</artifactId>
-           <version>1.0-SNAPSHOT</version>
+           <version>1.0.2</version>
       </dependency>
   </dependencies>
   <build>
