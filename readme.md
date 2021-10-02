@@ -96,17 +96,30 @@ For the above example payload and example configuration, the build would be trig
 In TeamCity, triggers are configured on a build configuration. 
 
 1. Navigate to the configuration page in TeamCity and select the `Triggers` tab.
-1. Click `+ Add new trigger` and choose `WebHook Listening build trigger` from the bottom of the list.
+1. Click `+ Add new trigger` and choose `Webhook build trigger` from the bottom of the list.
 1. Configure the trigger settings. See the above screenshot for an example configuration.
 1. Click Save, and the settings will be validated and saved.
 1. Go to the `General Settings` tab and note the `Build Configuration ID`. This will be part of the URL for the webhook endpoint.
 
 ##### Triggering a build with a webhook
 
-The WebHook Trigger endpoint is installed in TeamCity by this plugin. The location is <i><teamcity_root_url></i>/app/webhook-trigger/<i>BuildConfigId</i>.
-This endpoint is authenticated by TeamCity so the easiest way to allow the WebHook Sender to authenticate is to prepend `/httpAuth` to the URL and send basic authentication credentials. Then the webhook trigger URL becomes <i><teamcity_root_url></i>/httpAuth/app/webhook-trigger/<i>BuildConfigId</i>
+The WebHook Trigger endpoint is installed in TeamCity by this plugin. The location is <i><teamcity_root_url></i>/app/rest/webhook-trigger/<i>BuildConfigId</i>.
+This endpoint is authenticated by TeamCity so there are two options for authenticating:
+1. Using Bearer Authentication (TeamCity Access Tokens) to allow the WebHook Sender to authenticate with TeamCity. This is the preferred option.
+1. Using Basic Authentication (username/password) to allow the WebHook Sender to authenticate with TeamCity.
 
-See also [issue #5](https://github.com/tcplugins/tcWebHookTrigger/issues/5) for progress on Bearer authentication. 
+###### Creating an Access Token
+
+An access token allows using a token to represent a user. The token can be deleted at any time and a new one created. This token 
+represents an existing user, and allows authentication without disclosing a user's username or password.
+
+Create a token using the following steps
+1. Click your username in the top right corner of TeamCity and choose `Profile`.
+1. Select the `Access Tokens` tab and click the `Create access token` button.
+1. Choose your Name, Duration and Permissions. An example is shown below.
+   ![Example Access Token Configuration](docs/images/create_access_token_screenshot.png)
+1. On the next screen, take care to copy the Token value. This is the bearer authentication token, and will not be visible again. 
+1. Configure your WebHook Sender to use Bearer authentication with the above token, or configure a specific header in the following format.. `Authorization: Bearer TOKEN_VALUE`, where `TOKEN_VALUE` is the token from the token creation screen.
 
 ###### Example logging
 

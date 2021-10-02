@@ -45,9 +45,13 @@ public class BuildTriggerHandlerService {
 
 	public void handleWebHook(SUser currentUser, String buildTypeExternalId, String payload) {
 		TriggersHolder triggersHolder = myBuildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId);
-		if (! currentUser.isPermissionGrantedForProject(buildTypeExternalId, Permission.RUN_BUILD)) {
-			throw new PermissionedDeniedException(String.format("RUN_BUILD permission is not granted for user '%s' on build '%s'.", currentUser.getUsername(), triggersHolder.getsBuildType().getExternalId()));
-		}
+		
+		Loggers.ACTIVITIES.info(String.format("user is %s. Permissions are %s", currentUser.getUsername(), currentUser.getPermissionsGrantedForProject(triggersHolder.getsBuildType().getExternalId()).toList()));
+		Loggers.ACTIVITIES.info(String.format("user is %s. Permissions are %s", currentUser.getUsername(), currentUser.getPermissionsGrantedForProject(triggersHolder.getsBuildType().getInternalId()).toList()));
+		
+//		if (! currentUser.isPermissionGrantedForProject(triggersHolder.getsBuildType().getInternalId(), Permission.RUN_BUILD)) {
+//			throw new PermissionedDeniedException(String.format("RUN_BUILD permission is not granted for user '%s' on build '%s'.", currentUser.getUsername(), triggersHolder.getsBuildType().getExternalId()));
+//		}
 		for (BuildTriggerDescriptor trigger : triggersHolder.getTriggers()) {
 			Loggers.ACTIVITIES.debug(String.format("%s: Starting Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 			Loggers.ACTIVITIES.debug(LOGGING_PREFIX + ": Webhook Payload content: \n" + payload);

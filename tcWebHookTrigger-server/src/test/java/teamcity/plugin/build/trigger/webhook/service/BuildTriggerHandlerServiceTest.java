@@ -3,6 +3,7 @@ package teamcity.plugin.build.trigger.webhook.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,6 +26,7 @@ import jetbrains.buildServer.serverSide.BuildPromotion;
 import jetbrains.buildServer.serverSide.SBuildType;
 import jetbrains.buildServer.serverSide.SQueuedBuild;
 import jetbrains.buildServer.serverSide.auth.Permission;
+import jetbrains.buildServer.serverSide.auth.Permissions;
 import jetbrains.buildServer.users.SUser;
 import teamcity.plugin.build.trigger.webhook.TriggerParameters;
 import teamcity.plugin.build.trigger.webhook.parser.JsonToPropertiesParser;
@@ -33,7 +35,8 @@ import teamcity.plugin.build.trigger.webhook.service.BuildTriggerResolverService
 @RunWith(MockitoJUnitRunner.class)
 public class BuildTriggerHandlerServiceTest {
 
-	private static final String MY_TEST_BUILD_ID = "MyTestBuildId";
+	private static final String MY_TEST_BUILD_EXTERNAL_ID = "MyTestBuildId";
+	private static final String MY_TEST_BUILD_INTERNAL_ID = "build01";
 	private static final String TEST_DEFINITION_01 = "name=foo::required=true::defaultValue=bar::path=$.foo.bar";
 	private static final String TEST_DEFINITION_02 = "name=branch::required=true::path=$.project.branch";
 
@@ -72,13 +75,17 @@ public class BuildTriggerHandlerServiceTest {
 		when(buildCustomizer.createPromotion()).thenReturn(buildPromotion);
 		when(triggerDescriptor.getId()).thenReturn(UUID.randomUUID().toString());
 		when(triggerDescriptor.getTriggerName()).thenReturn(WebHookBuildTriggerService.WEBHOOK_BUILD_TRIGGER_NAME);
-		when(currentUser.isPermissionGrantedForProject(MY_TEST_BUILD_ID, Permission.RUN_BUILD)).thenReturn(true);
+		lenient().when(currentUser.isPermissionGrantedForProject(MY_TEST_BUILD_INTERNAL_ID, Permission.RUN_BUILD)).thenReturn(true);
+		lenient().when(currentUser.getPermissionsGrantedForProject(MY_TEST_BUILD_EXTERNAL_ID)).thenReturn(Permissions.NO_PERMISSIONS);
+		lenient().when(currentUser.getPermissionsGrantedForProject(MY_TEST_BUILD_INTERNAL_ID)).thenReturn(Permissions.NO_PERMISSIONS);
+		lenient().when(sBuildType.getExternalId()).thenReturn(MY_TEST_BUILD_EXTERNAL_ID);
+		when(sBuildType.getInternalId()).thenReturn(MY_TEST_BUILD_INTERNAL_ID);
 	}
 	
 	@Test
 	public void testDoesNotCallBuildCustomizerFactoryWhenBuildTypeIdIsNull() throws Exception {
-		String buildTypeExternalId = MY_TEST_BUILD_ID;
-		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(null, Collections.emptyList()));
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
+		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.emptyList()));
 		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, "{}");
 		verify(buildCustomizerFactory, times(0)).createBuildCustomizer(any(), eq(currentUser));
@@ -86,7 +93,7 @@ public class BuildTriggerHandlerServiceTest {
 	
 	@Test
 	public void testDoesNotCallBuildCustomizerFactoryWhenBuildTypeIdIsMockedButNoTriggersAreFound() throws Exception {
-		String buildTypeExternalId = MY_TEST_BUILD_ID;
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.emptyList()));
 		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, "{}");
@@ -94,7 +101,7 @@ public class BuildTriggerHandlerServiceTest {
 	}
 	@Test
 	public void testCallsBuildCustomizerFactoryWhenTriggersAreFound() throws Exception {
-		String buildTypeExternalId = MY_TEST_BUILD_ID;
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		when(triggerDescriptor.getProperties()).thenReturn(Collections.singletonMap(TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_01));
 		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, currentUser)).thenReturn(buildCustomizer);
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
@@ -104,7 +111,7 @@ public class BuildTriggerHandlerServiceTest {
 	}
 	@Test
 	public void testCallsBuildCustomizerFactoryWhenTriggersAreFoundAndFiltersMatch() throws Exception {
-		String buildTypeExternalId = MY_TEST_BUILD_ID;
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		jsonToPropertiesParser = new JsonToPropertiesParser();
 		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
 				TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_02,
@@ -117,7 +124,7 @@ public class BuildTriggerHandlerServiceTest {
 	}
 	@Test
 	public void testDoesNotCallBuildCustomizerFactoryWhenTriggersAreFoundButFiltersDontMatch() throws Exception {
-		String buildTypeExternalId = MY_TEST_BUILD_ID;
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
 				TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_01,
 				TriggerParameters.FILTERS, "name=branch::template=${branch}::regex=\\s+"));
