@@ -9,6 +9,10 @@ public class PermissionedDeniedException extends WebException {
 	public PermissionedDeniedException(Exception ex) {
 		super(ex);
 	}
+	
+	public PermissionedDeniedException(String message) {
+		super(message);
+	}
 
 	@Override
 	public int getStatusCode() {
