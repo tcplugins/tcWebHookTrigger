@@ -62,10 +62,16 @@ There are three key for which values can be assigned.
 | template | Allows creating a string made up of text and path mappings | Yes
 | regex | Specifies the regular expression to use to validate the rendered template matches. If the regex does not match, the build will not be triggered | Yes |
 
+Note: Templates contain one or more variables in a string. The format for referencing variables is `${variable_name]`. 
+Templates can contain multiple variables and other text. For example, the following template is valid:
+
+    template=A build on branch ${branch} was triggered by ticket number ${ticket_number}.
 
 ##### The "branch" keyword
 
-A path mapping or a filter named `branch` has a special meaning. If this is found, then the build will be triggered against that branch. If the branch is not value, behaviour is undefined.
+A path mapping or a filter named `branch` has a special meaning. If this is found, then the build will be triggered against that branch. 
+
+> :warning: If the branch is not valid, TeamCity will still attempt to run the build. However the build will normally fail with an error.
 
 ##### Putting it all together
 
