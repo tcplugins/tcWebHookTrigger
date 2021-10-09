@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jetbrains.buildServer.users.SUser;
+import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import teamcity.plugin.build.trigger.webhook.rest.service.UserProviderService;
 import teamcity.plugin.build.trigger.webhook.service.BuildTriggerHandlerService;
 import teamcity.plugin.rest.core.Loggers;
@@ -34,9 +34,8 @@ public class WebHookTriggerRestController extends BaseRestApiController {
     
     @PostMapping("/{buildTypeExternalId}")
     public ResponseEntity<String> restartServer(@PathVariable String buildTypeExternalId,  @RequestBody String payload) {
-    	//checkIfAdministator();
-		SUser sUser = myUserProviderService.getUser();
-		myBuildTriggerHandlerService.handleWebHook(sUser, buildTypeExternalId, payload);
+		AuthorityHolder user = myUserProviderService.getAuthorityHolder();
+		myBuildTriggerHandlerService.handleWebHook(user, buildTypeExternalId, payload);
 		return ResponseEntity.accepted().build();
     }
     

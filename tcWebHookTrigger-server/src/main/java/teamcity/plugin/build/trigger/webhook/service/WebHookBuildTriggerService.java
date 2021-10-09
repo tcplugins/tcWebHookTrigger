@@ -14,12 +14,10 @@ import jetbrains.buildServer.buildTriggers.BuildTriggerService;
 import jetbrains.buildServer.buildTriggers.BuildTriggeringPolicy;
 import jetbrains.buildServer.serverSide.InvalidProperty;
 import jetbrains.buildServer.serverSide.PropertiesProcessor;
-import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import teamcity.plugin.build.trigger.webhook.Constants;
 import teamcity.plugin.build.trigger.webhook.TriggerParameters;
 import teamcity.plugin.build.trigger.webhook.TriggerUtils;
-import teamcity.plugin.build.trigger.webhook.controller.TriggerController;
 import teamcity.plugin.build.trigger.webhook.exception.MalformedTriggerDefinitionException;
 
 public class WebHookBuildTriggerService extends BuildTriggerService {
@@ -27,11 +25,9 @@ public class WebHookBuildTriggerService extends BuildTriggerService {
 	public static final String WEBHOOK_BUILD_TRIGGER_NAME = "webhookBuildTrigger";
 	private final PluginDescriptor myPluginDescriptor;
 	private final BuildTriggeringPolicy myPolicy;
-	private final String myUrl;
 	
-	public WebHookBuildTriggerService(@NotNull final PluginDescriptor pluginDescriptor, @NotNull final SBuildServer sBuildServer) {
+	public WebHookBuildTriggerService(@NotNull final PluginDescriptor pluginDescriptor) {
 			    myPluginDescriptor = pluginDescriptor;
-			    myUrl = sBuildServer.getRootUrl() + TriggerController.TRIGGER_BASE_URI;
 			    myPolicy = new NonPollingBuildTriggeringPolicy();
 	}
 
@@ -74,6 +70,7 @@ public class WebHookBuildTriggerService extends BuildTriggerService {
 	}
 
 	@Override
+	@SuppressWarnings("squid:S1604") // Just use interface, not lamda
 	public PropertiesProcessor getTriggerPropertiesProcessor() {
 		return new PropertiesProcessor() {
 			public Collection<InvalidProperty> process(Map<String, String> properties) {

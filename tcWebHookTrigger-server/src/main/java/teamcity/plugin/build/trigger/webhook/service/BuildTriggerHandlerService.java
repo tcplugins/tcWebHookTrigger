@@ -12,8 +12,8 @@ import jetbrains.buildServer.buildTriggers.BuildTriggerDescriptor;
 import jetbrains.buildServer.serverSide.BuildCustomizer;
 import jetbrains.buildServer.serverSide.BuildCustomizerFactory;
 import jetbrains.buildServer.serverSide.SQueuedBuild;
+import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
-import jetbrains.buildServer.users.SUser;
 import teamcity.plugin.build.trigger.webhook.Constants;
 import teamcity.plugin.build.trigger.webhook.Loggers;
 import teamcity.plugin.build.trigger.webhook.TriggerFilterDefinition;
@@ -43,15 +43,14 @@ public class BuildTriggerHandlerService {
 		myBuildCustomizerFactory = buildCustomizerFactory;
 	}
 
-	public void handleWebHook(SUser currentUser, String buildTypeExternalId, String payload) {
+	public void handleWebHook(AuthorityHolder user, String buildTypeExternalId, String payload) {
 		TriggersHolder triggersHolder = myBuildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId);
 		
-		Loggers.ACTIVITIES.debug(String.format("user is %s. Permissions are %s", currentUser.getUsername(), currentUser.getPermissionsGrantedForProject(triggersHolder.getsBuildType().getInternalId()).toList()));
+		Loggers.ACTIVITIES.debug(String.format("user is %s. Permissions are %s", user.getAssociatedUser().getUsername(), user.getPermissionsGrantedForProject(triggersHolder.getsBuildType().getInternalId()).toList()));
 		
-		// TODO: Fix permissions checking after https://youtrack.jetbrains.com/issue/TW-73348 is resolved.
-		//if (! currentUser.isPermissionGrantedForProject(triggersHolder.getsBuildType().getInternalId(), Permission.RUN_BUILD)) {
-		//	throw new PermissionedDeniedException(String.format("RUN_BUILD permission is not granted for user '%s' on build '%s'.", currentUser.getUsername(), triggersHolder.getsBuildType().getExternalId()));
-		//}
+		if (! user.isPermissionGrantedForProject(triggersHolder.getsBuildType().getInternalId(), Permission.RUN_BUILD)) {
+			throw new PermissionedDeniedException(String.format("RUN_BUILD permission is not granted for user '%s' on build '%s'.", user.getAssociatedUser().getUsername(), triggersHolder.getsBuildType().getExternalId()));
+		}
 		for (BuildTriggerDescriptor trigger : triggersHolder.getTriggers()) {
 			Loggers.ACTIVITIES.debug(String.format("%s: Starting Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 			Loggers.ACTIVITIES.debug(LOGGING_PREFIX + ": Webhook Payload content: \n" + payload);
@@ -66,7 +65,7 @@ public class BuildTriggerHandlerService {
 			ResolvedValuesHolder valuesHolder = checkResolvedParameters(parameterDefinitions, filters, resolvedParameters);
 						
 			if (valuesHolder.parametersAreValid() && valuesHolder.triggersAreValid()) {
-				BuildCustomizer buildCustomiser = myBuildCustomizerFactory.createBuildCustomizer(triggersHolder.getsBuildType(), currentUser);
+				BuildCustomizer buildCustomiser = myBuildCustomizerFactory.createBuildCustomizer(triggersHolder.getsBuildType(), null);
 				
 				// Populate the parameters from the payload.
 				buildCustomiser.setParameters(valuesHolder.getAllResolvedValues());
