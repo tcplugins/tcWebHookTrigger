@@ -46,9 +46,8 @@ public class BuildTriggerHandlerService {
 	public void handleWebHook(AuthorityHolder user, String buildTypeExternalId, String payload) {
 		TriggersHolder triggersHolder = myBuildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId);
 		
-		Loggers.ACTIVITIES.debug(String.format("user is %s. Permissions are %s", user.getAssociatedUser().getUsername(), user.getPermissionsGrantedForProject(triggersHolder.getsBuildType().getInternalId()).toList()));
-		
-		if (! user.isPermissionGrantedForProject(triggersHolder.getsBuildType().getInternalId(), Permission.RUN_BUILD)) {
+		// Check that the representation of the user (could be a user for Basic Auth, or a token instance for Bearer) has the required permission.
+		if (! user.isPermissionGrantedForProject(triggersHolder.getsBuildType().getProjectId(), Permission.RUN_BUILD)) {
 			throw new PermissionedDeniedException(String.format("RUN_BUILD permission is not granted for user '%s' on build '%s'.", user.getAssociatedUser().getUsername(), triggersHolder.getsBuildType().getExternalId()));
 		}
 		for (BuildTriggerDescriptor trigger : triggersHolder.getTriggers()) {

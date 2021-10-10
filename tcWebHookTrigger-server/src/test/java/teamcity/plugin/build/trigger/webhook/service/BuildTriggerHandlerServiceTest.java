@@ -37,6 +37,7 @@ import teamcity.plugin.build.trigger.webhook.service.BuildTriggerResolverService
 public class BuildTriggerHandlerServiceTest {
 
 	private static final String MY_TEST_BUILD_EXTERNAL_ID = "MyTestBuildId";
+	private static final String MY_TEST_PROJECT_INTERNAL_ID = "project1";
 	private static final String MY_TEST_BUILD_INTERNAL_ID = "build01";
 	private static final String TEST_DEFINITION_01 = "name=foo::required=true::defaultValue=bar::path=$.foo.bar";
 	private static final String TEST_DEFINITION_02 = "name=branch::required=true::path=$.project.branch";
@@ -74,18 +75,16 @@ public class BuildTriggerHandlerServiceTest {
 	
 	@Before
 	public void setup() {
-		when(currentUser.getAssociatedUser()).thenReturn(user);
-		when(user.getUsername()).thenReturn("my_user");
 		when(buildPromotion.addToQueue(anyString())).thenReturn(sQueuedBuild);
 		when(sQueuedBuild.getItemId()).thenReturn(String.valueOf(1001001L));
 		when(buildCustomizer.createPromotion()).thenReturn(buildPromotion);
 		when(triggerDescriptor.getId()).thenReturn(UUID.randomUUID().toString());
 		when(triggerDescriptor.getTriggerName()).thenReturn(WebHookBuildTriggerService.WEBHOOK_BUILD_TRIGGER_NAME);
-		lenient().when(currentUser.isPermissionGrantedForProject(MY_TEST_BUILD_INTERNAL_ID, Permission.RUN_BUILD)).thenReturn(true);
+		lenient().when(currentUser.isPermissionGrantedForProject(MY_TEST_PROJECT_INTERNAL_ID, Permission.RUN_BUILD)).thenReturn(true);
 		lenient().when(currentUser.getPermissionsGrantedForProject(MY_TEST_BUILD_EXTERNAL_ID)).thenReturn(Permissions.NO_PERMISSIONS);
 		lenient().when(currentUser.getPermissionsGrantedForProject(MY_TEST_BUILD_INTERNAL_ID)).thenReturn(Permissions.NO_PERMISSIONS);
 		lenient().when(sBuildType.getExternalId()).thenReturn(MY_TEST_BUILD_EXTERNAL_ID);
-		when(sBuildType.getInternalId()).thenReturn(MY_TEST_BUILD_INTERNAL_ID);
+		lenient().when(sBuildType.getProjectId()).thenReturn(MY_TEST_PROJECT_INTERNAL_ID);
 	}
 	
 	@Test
