@@ -17,10 +17,13 @@
 <%@ include file="/include.jsp" %>
 <%@ page import="teamcity.plugin.build.trigger.webhook.TriggerParameters" %>
 <%@ taglib prefix="props" tagdir="/WEB-INF/tags/props" %>
+<jsp:useBean id="buildForm" scope="request" type="jetbrains.buildServer.controllers.admin.projects.EditableBuildTypeSettingsForm"/>
+<jsp:useBean id="server" scope="request" type="jetbrains.buildServer.BuildServer"/>
 
 <tr class="noBorder" >
     <td colspan="2">
-        <em>Trigger a build by sending a webhook to TODO: Put URL here if possible.</em>
+        <strong>Trigger a build by sending a webhook to the following URL</strong>
+        <div style="padding:0.5em; padding-left:2em;"><em>${server.rootUrl}/app/rest/webhook-trigger/${buildForm.externalId}</em></div>
     </td>
 </tr>
 
