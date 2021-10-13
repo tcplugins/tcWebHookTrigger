@@ -14,6 +14,9 @@ import jetbrains.buildServer.serverSide.BuildCustomizerFactory;
 import jetbrains.buildServer.serverSide.SQueuedBuild;
 import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
+import jetbrains.buildServer.vcs.SVcsModification;
+import jetbrains.buildServer.vcs.VcsModificationHistoryEx;
+import jetbrains.buildServer.vcs.VcsRootInstance;
 import teamcity.plugin.build.trigger.webhook.Constants;
 import teamcity.plugin.build.trigger.webhook.Loggers;
 import teamcity.plugin.build.trigger.webhook.TriggerFilterDefinition;
@@ -32,20 +35,22 @@ public class BuildTriggerHandlerService {
 	private BuildTriggerResolverService myBuildTriggerResolverService;
 	private JsonToPropertiesParser myJsonToPropertiesParser;
 	private BuildCustomizerFactory myBuildCustomizerFactory;
+	private VcsModificationHistoryEx myVcsModificationHistoryEx;
 
 	public BuildTriggerHandlerService(
 			BuildTriggerResolverService buildTriggerResolverService,
 			JsonToPropertiesParser jsonToPropertiesParser,
-			BuildCustomizerFactory buildCustomizerFactory
+			BuildCustomizerFactory buildCustomizerFactory,
+			VcsModificationHistoryEx vcsModificationHistoryEx
 			) {
 		myBuildTriggerResolverService = buildTriggerResolverService;
 		myJsonToPropertiesParser = jsonToPropertiesParser;
 		myBuildCustomizerFactory = buildCustomizerFactory;
+		myVcsModificationHistoryEx = vcsModificationHistoryEx;
 	}
 
 	public void handleWebHook(AuthorityHolder user, String buildTypeExternalId, String payload) {
 		TriggersHolder triggersHolder = myBuildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId);
-		
 		// Check that the representation of the user (could be a user for Basic Auth, or a token instance for Bearer) has the required permission.
 		if (! user.isPermissionGrantedForProject(triggersHolder.getsBuildType().getProjectId(), Permission.RUN_BUILD)) {
 			throw new PermissionedDeniedException(String.format("RUN_BUILD permission is not granted for user '%s' on build '%s'.", user.getAssociatedUser().getUsername(), triggersHolder.getsBuildType().getExternalId()));
@@ -90,14 +95,52 @@ public class BuildTriggerHandlerService {
 					Loggers.ACTIVITIES.debug(String.format("%s: No filter or parameter named 'branch' found. Build will be requested against the 'default' branch. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 				}
 				
-				// Now queue the build, and set a comment that says we triggered it.
-				SQueuedBuild queuedBuild = buildCustomiser.createPromotion().addToQueue(Constants.PLUGIN_DESCRIPTION);
-				Loggers.ACTIVITIES.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId()));
+				String commitId = null;
+				// Look for a trigger named "commit". If defined, try to build that commit id.
+				if (valuesHolder.getResolvedTriggers().containsKey(Constants.COMMIT_ID_KEYWORD)) {
+					commitId = valuesHolder.getResolvedTriggers().get(Constants.COMMIT_ID_KEYWORD);
+					
+				// If we've not found a trigger, try looking for a parameter named "commit".
+				} else if (resolvedParameters.containsKey(Constants.COMMIT_ID_KEYWORD)) {
+					commitId = resolvedParameters.get(Constants.COMMIT_ID_KEYWORD);
+
+				// Else. don't try to set the commit to build. We will therefore build the latest commit on the branch.
+				} else {
+					Loggers.ACTIVITIES.debug(String.format("%s: No filter or parameter named 'commit' found. Build will be requested against the latest commit on the branch. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
+					queueBuild(buildTypeExternalId, trigger, buildCustomiser);
+				}
+			
+				if (commitId != null) {
+					SVcsModification foundModification = null;
+					for (VcsRootInstance vcsRoot : triggersHolder.getsBuildType().getVcsRootInstances()) {
+						SVcsModification modification =  myVcsModificationHistoryEx.findModificationByVersion(vcsRoot, commitId);
+						if (modification != null) {
+							foundModification = modification;
+							break;
+						}
+					}
+					if (foundModification != null) {
+						Loggers.ACTIVITIES.debug(String.format("%s: Found specific modifcation in VCS for commit '%s'. Build will be triggered against this commit. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));	
+						buildCustomiser.setChangesUpTo(foundModification);
+						queueBuild(buildTypeExternalId, trigger, buildCustomiser);
+					} else {
+						Loggers.ACTIVITIES.info(String.format("%s: No modifcation found in VCS for commit '%s'. Build will not be triggered. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
+						continue;
+					}
+				}
+				
 			} else {
 				Loggers.ACTIVITIES.info(String.format("%s: Build not queued by Webhook Trigger processing. Trigger filters did not match webhook payload content. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 			}
 			Loggers.ACTIVITIES.debug(String.format("%s: Completed Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 		}
+	}
+
+	private SQueuedBuild queueBuild(String buildTypeExternalId, BuildTriggerDescriptor trigger, BuildCustomizer buildCustomiser) {
+		// Now queue the build, and set a comment that says we triggered it.
+		SQueuedBuild queuedBuild = buildCustomiser.createPromotion().addToQueue(Constants.PLUGIN_DESCRIPTION);
+		Loggers.ACTIVITIES.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId()));
+		return queuedBuild;
 	}
 
 	private ResolvedValuesHolder checkResolvedParameters(List<TriggerParameterDefinition> parameterDefinitions, List<TriggerFilterDefinition> filters, Map<String, String> resolvedParameters) {

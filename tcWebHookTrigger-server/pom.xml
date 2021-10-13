@@ -4,12 +4,16 @@
   <parent>
     <artifactId>tcWebHookTrigger</artifactId>
     <groupId>netwolfuk.teamcity.plugins</groupId>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
   </parent>
   <artifactId>tcWebHookTrigger-server</artifactId>
   <packaging>jar</packaging>
-  
-  <repositories>
+
+	<repositories>
+		<repository>
+			<id>local-mvn-repo</id>
+			<url>file://${project.basedir}/local-mvn-repo</url>
+		</repository>
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
@@ -21,6 +25,13 @@
     <dependency>
       <groupId>org.jetbrains.teamcity</groupId>
       <artifactId>server-api</artifactId>
+      <version>${teamcity-version}</version>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jetbrains.teamcity</groupId>
+      <artifactId>server</artifactId>
       <version>${teamcity-version}</version>
       <scope>provided</scope>
     </dependency>

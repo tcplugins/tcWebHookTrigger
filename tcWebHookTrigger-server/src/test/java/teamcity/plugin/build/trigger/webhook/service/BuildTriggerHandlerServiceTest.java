@@ -29,6 +29,10 @@ import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
 import jetbrains.buildServer.serverSide.auth.Permissions;
 import jetbrains.buildServer.users.User;
+import jetbrains.buildServer.vcs.SVcsModification;
+import jetbrains.buildServer.vcs.VcsModificationHistoryEx;
+import jetbrains.buildServer.vcs.VcsRootInstance;
+import teamcity.plugin.build.trigger.webhook.Constants;
 import teamcity.plugin.build.trigger.webhook.TriggerParameters;
 import teamcity.plugin.build.trigger.webhook.parser.JsonToPropertiesParser;
 import teamcity.plugin.build.trigger.webhook.service.BuildTriggerResolverService.TriggersHolder;
@@ -41,6 +45,7 @@ public class BuildTriggerHandlerServiceTest {
 	private static final String MY_TEST_BUILD_INTERNAL_ID = "build01";
 	private static final String TEST_DEFINITION_01 = "name=foo::required=true::defaultValue=bar::path=$.foo.bar";
 	private static final String TEST_DEFINITION_02 = "name=branch::required=true::path=$.project.branch";
+	private static final String TEST_DEFINITION_03 = "name=commit::required=true::path=$.project.commit";
 
 	@Mock
 	BuildTriggerResolverService buildTriggerResolverService;
@@ -53,6 +58,9 @@ public class BuildTriggerHandlerServiceTest {
 	
 	@Mock
 	BuildCustomizer buildCustomizer;
+	
+	@Mock
+	VcsModificationHistoryEx vcsModificationHistoryEx;
 	
 	@Mock
 	BuildPromotion buildPromotion;
@@ -71,7 +79,10 @@ public class BuildTriggerHandlerServiceTest {
 
 	@Mock BuildTriggerDescriptor triggerDescriptor;
 	
-	private static final String testJsonString = "{ 'project' : { 'branch' : 'main' } } }";
+	@Mock VcsRootInstance vcsRootInstance; 
+	@Mock SVcsModification svcsModification; 
+	
+	private static final String testJsonString = "{ 'project' : { 'branch' : 'main', 'commit' : '1234567' } } }";
 	
 	@Before
 	public void setup() {
@@ -91,7 +102,7 @@ public class BuildTriggerHandlerServiceTest {
 	public void testDoesNotCallBuildCustomizerFactoryWhenBuildTypeIdIsNull() throws Exception {
 		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.emptyList()));
-		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, "{}");
 		verify(buildCustomizerFactory, times(0)).createBuildCustomizer(any(), eq(null));
 	}
@@ -100,7 +111,7 @@ public class BuildTriggerHandlerServiceTest {
 	public void testDoesNotCallBuildCustomizerFactoryWhenBuildTypeIdIsMockedButNoTriggersAreFound() throws Exception {
 		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.emptyList()));
-		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, "{}");
 		verify(buildCustomizerFactory, times(0)).createBuildCustomizer(any(), eq(null));
 	}
@@ -110,7 +121,7 @@ public class BuildTriggerHandlerServiceTest {
 		when(triggerDescriptor.getProperties()).thenReturn(Collections.singletonMap(TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_01));
 		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, null)).thenReturn(buildCustomizer);
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
-		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, testJsonString);
 		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(null));
 	}
@@ -123,7 +134,7 @@ public class BuildTriggerHandlerServiceTest {
 				TriggerParameters.FILTERS, "name=branch::template=${branch}::regex=\\w+"));
 		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, null)).thenReturn(buildCustomizer);
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
-		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, testJsonString);
 		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(null));
 	}
@@ -134,9 +145,42 @@ public class BuildTriggerHandlerServiceTest {
 				TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_01,
 				TriggerParameters.FILTERS, "name=branch::template=${branch}::regex=\\s+"));
 		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
-		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory);
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, testJsonString);
 		verify(buildCustomizerFactory, times(0)).createBuildCustomizer(any(), eq(null));
+	}
+	@Test
+	public void testCallsAddToQueueWhenCommitTriggersAreFound() throws Exception {
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
+		jsonToPropertiesParser = new JsonToPropertiesParser();
+		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
+				TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_03));
+		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, null)).thenReturn(buildCustomizer);
+		when(sBuildType.getVcsRootInstances()).thenReturn(Collections.singletonList(vcsRootInstance));
+		when(vcsModificationHistoryEx.findModificationByVersion(vcsRootInstance, "1234567")).thenReturn(svcsModification);
+		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
+		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, testJsonString);
+		verify(buildCustomizerFactory).createBuildCustomizer(any(), eq(null));
+		verify(buildCustomizer).createPromotion();
+		verify(buildCustomizer).setChangesUpTo(svcsModification);
+		verify(buildPromotion).addToQueue(eq(Constants.PLUGIN_DESCRIPTION));
+	}
+	@Test
+	public void testDoesNotCallAddToQueueWhenCommitTriggersDoNotFindCommit() throws Exception {
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
+		jsonToPropertiesParser = new JsonToPropertiesParser();
+		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
+				TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_03));
+		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, null)).thenReturn(buildCustomizer);
+		when(sBuildType.getVcsRootInstances()).thenReturn(Collections.emptyList());
+		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
+		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, testJsonString);
+		verify(buildCustomizerFactory).createBuildCustomizer(any(), eq(null));
+		verify(buildCustomizer,times(0)).createPromotion();
+		verify(buildCustomizer, times(0)).setChangesUpTo(svcsModification);
+		verify(buildPromotion, times(0)).addToQueue(eq(Constants.PLUGIN_DESCRIPTION));
 	}
 
 }
