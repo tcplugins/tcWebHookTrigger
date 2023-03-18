@@ -72,11 +72,13 @@ public class BuildTriggerHandlerService {
 				BuildCustomizer buildCustomiser = myBuildCustomizerFactory.createBuildCustomizer(triggersHolder.getsBuildType(), null);
 				
 				// Populate the parameters from the payload.
-				buildCustomiser.setParameters(valuesHolder.getAllResolvedValues());
+				Map<String, String> customParameters = valuesHolder.getAllResolvedValues();
 				
 				if (Boolean.parseBoolean(trigger.getProperties().get(TriggerParameters.INCLUDE_WHOLE_PAYLOAD))) {
-					buildCustomiser.setParameters(Collections.singletonMap("payload", payload));
+					customParameters.put("payload", payload);
 				}
+				
+				buildCustomiser.setParameters(customParameters);
 				
 				// Look for a trigger named "branch". If defined, build that branch.
 				if (valuesHolder.getResolvedTriggers().containsKey(Constants.BRANCH_NAME_KEYWORD)) {

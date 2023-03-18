@@ -4,7 +4,7 @@
   <parent>
     <artifactId>tcWebHookTrigger</artifactId>
     <groupId>netwolfuk.teamcity.plugins</groupId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
   </parent>
   <artifactId>tcWebHookTrigger-build</artifactId>
   <packaging>pom</packaging>
