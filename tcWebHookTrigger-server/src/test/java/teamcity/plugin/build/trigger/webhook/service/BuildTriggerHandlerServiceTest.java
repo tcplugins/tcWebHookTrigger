@@ -1,5 +1,7 @@
 package teamcity.plugin.build.trigger.webhook.service;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -10,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -181,6 +184,19 @@ public class BuildTriggerHandlerServiceTest {
 		verify(buildCustomizer,times(0)).createPromotion();
 		verify(buildCustomizer, times(0)).setChangesUpTo(svcsModification);
 		verify(buildPromotion, times(0)).addToQueue(eq(Constants.PLUGIN_DESCRIPTION));
+	}
+	
+	@Test
+	public void testMatcher() {
+		final String regex = "[Ffred]{4}";
+		assertTrue(Pattern.matches(regex, "Fred"));
+		assertTrue(Pattern.matches(regex, "fred"));
+		assertTrue(Pattern.matches(regex, "derf"));
+		
+		assertFalse(Pattern.matches(regex, "fran"));
+		assertFalse(Pattern.matches(regex, "Fre"));
+		assertFalse(Pattern.matches(regex, "Friend"));
+		assertFalse(Pattern.matches(regex, "Freddy"));
 	}
 
 }
