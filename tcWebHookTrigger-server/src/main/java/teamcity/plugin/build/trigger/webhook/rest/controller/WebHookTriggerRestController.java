@@ -33,7 +33,7 @@ public class WebHookTriggerRestController extends BaseRestApiController {
 	}
     
     @PostMapping("/{buildTypeExternalId}")
-    public ResponseEntity<String> restartServer(@PathVariable String buildTypeExternalId,  @RequestBody String payload) {
+    public ResponseEntity<String> handleWebHookTriggerForBuild(@PathVariable String buildTypeExternalId,  @RequestBody String payload) {
 		AuthorityHolder user = myUserProviderService.getAuthorityHolder();
 		myBuildTriggerHandlerService.handleWebHook(user, buildTypeExternalId, payload);
 		return ResponseEntity.accepted().build();
