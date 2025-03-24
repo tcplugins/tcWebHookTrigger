@@ -62,7 +62,7 @@ There are three key for which values can be assigned.
 | template | Allows creating a string made up of text and path mappings | Yes
 | regex | Specifies the regular expression to use to validate the rendered template matches. If the regex does not match, the build will not be triggered | Yes |
 
-Note: Templates contain one or more variables in a string. The format for referencing variables is `${variable_name]`. 
+Note: Templates contain one or more variables in a string. The format for referencing variables is `${variable_name}`. 
 Templates can contain multiple variables and other text. For example, the following template is valid:
 
     template=A build on branch ${branch} was triggered by ticket number ${ticket_number}.
