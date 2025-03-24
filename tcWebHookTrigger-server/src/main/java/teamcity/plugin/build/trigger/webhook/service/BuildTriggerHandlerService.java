@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -195,7 +196,17 @@ public class BuildTriggerHandlerService {
 			final String regex = filterEntry.getRegex();
 			
 			final String resolvedFilter = TemplatedTextReplacer.resolve(filterTemplate, resolvedValuesHolder.getResolvedParameters());
-			if (Pattern.matches(regex, resolvedFilter)) {
+			Pattern p = Pattern.compile(regex);
+			Matcher m = p.matcher(resolvedFilter); 
+			if (m.matches()) {
+				if (m.groupCount() > 0) {
+					for (int i = 0; i <= m.groupCount(); i++) {
+						resolvedValuesHolder.addParameter(name + "_" + String.valueOf(i), m.group(i));
+						Loggers.ACTIVITIES.debug(
+							String.format("%s: Regex group match found. Adding parameter='%s', value='%s', regex='%s', input='%s'", 
+									LOGGING_PREFIX, name + "_" + String.valueOf(i), m.group(i), regex, resolvedFilter));
+					}
+				}
 				resolvedValuesHolder.addTrigger(name, resolvedFilter);
 				Loggers.ACTIVITIES.debug(
 						String.format("%s: Regex match found. name='%s', regex='%s', value='%s'", 

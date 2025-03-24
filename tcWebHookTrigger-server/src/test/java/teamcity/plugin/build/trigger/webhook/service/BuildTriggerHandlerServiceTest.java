@@ -142,6 +142,19 @@ public class BuildTriggerHandlerServiceTest {
 		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(null));
 	}
 	@Test
+	public void testCallsBuildCustomizerFactoryWhenTriggersAreFoundWithRegexFilters() throws Exception {
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
+		jsonToPropertiesParser = new JsonToPropertiesParser();
+		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
+				TriggerParameters.PATH_MAPPINGS, "name=branch_var::required=true::path=$.project.branch",
+				TriggerParameters.FILTERS, "name=branch_var::template=${branch_var}::regex=refs/(bugfix|feature)/((.+))\nname=branch::template=${branch_var_2}::regex=\\w+"));
+		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, null)).thenReturn(buildCustomizer);
+		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
+		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, "{ 'project' : { 'branch' : 'refs/feature/my_feature_01', 'commit' : '1234567' } } }");
+		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(null));
+	}
+	@Test
 	public void testDoesNotCallBuildCustomizerFactoryWhenTriggersAreFoundButFiltersDontMatch() throws Exception {
 		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
