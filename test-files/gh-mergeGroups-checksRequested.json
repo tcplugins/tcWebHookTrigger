@@ -1,0 +1,20 @@
+{
+  "action": "checks_requested",
+  "merge_group": {
+    "head_sha": "16ea3928b80ee84be16709ca7080aed652ff6be3",
+    "head_ref": "refs/heads/gh-readonly-queue/main/pr-22-93faed7cc31b54cec53d1f1014844a711fd1b78f",
+    "base_sha": "93faed7cc31b54cec53d1f1014844a711fd1b78f",
+    "base_ref": "refs/heads/main",
+    "head_commit": {
+      "id": "16ea3928b80ee84be16709ca7080aed652ff6be3",
+      "message": "Commit message"
+    }
+  },
+  "repository": {
+    "name": "repo",
+    "owner": {
+      "login": "owner"
+    }
+  },
+  "html_url": "https://github.com/owner/repo"
+}
