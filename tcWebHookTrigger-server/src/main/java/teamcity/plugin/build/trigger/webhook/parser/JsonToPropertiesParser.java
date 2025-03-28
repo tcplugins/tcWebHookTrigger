@@ -27,7 +27,7 @@ public class JsonToPropertiesParser {
 			} catch (InvalidJsonException ex) {
 				throw new UnparsablePayloadException(ex);
 			} catch (PathNotFoundException ex) {
-				Loggers.ACTIVITIES.debug(String.format("%s: Path not found in payload. name='%s', path='%s'", LOGGING_PREFIX, definition.getName(), definition.getPath()));
+				Loggers.TRIGGERS.debug(String.format("%s: Path not found in payload. name='%s', path='%s'", LOGGING_PREFIX, definition.getName(), definition.getPath()));
 			}
 		});
 		return resolvedParameters;

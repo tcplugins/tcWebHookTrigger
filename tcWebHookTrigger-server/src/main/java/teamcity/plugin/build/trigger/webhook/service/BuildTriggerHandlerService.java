@@ -57,8 +57,8 @@ public class BuildTriggerHandlerService {
 			throw new PermissionedDeniedException(String.format("RUN_BUILD permission is not granted for user '%s' on build '%s'.", user.getAssociatedUser().getUsername(), triggersHolder.getsBuildType().getExternalId()));
 		}
 		for (BuildTriggerDescriptor trigger : triggersHolder.getTriggers()) {
-			Loggers.ACTIVITIES.debug(String.format("%s: Starting Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
-			Loggers.ACTIVITIES.debug(LOGGING_PREFIX + ": Webhook Payload content: \n" + payload);
+			Loggers.TRIGGERS.debug(String.format("%s: Starting Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
+			Loggers.TRIGGERS.debug(LOGGING_PREFIX + ": Webhook Payload content: \n" + payload);
 			List<TriggerParameterDefinition> parameterDefinitions = TriggerUtils.toDefinitions(trigger.getProperties().get(TriggerParameters.PATH_MAPPINGS));
 			
 			// Get the parameters definitions and try to parse them out of the JSON/XML document. 
@@ -84,18 +84,18 @@ public class BuildTriggerHandlerService {
 				// Look for a trigger named "branch". If defined, build that branch.
 				if (valuesHolder.getResolvedTriggers().containsKey(Constants.BRANCH_NAME_KEYWORD)) {
 					String branchName = valuesHolder.getResolvedTriggers().get(Constants.BRANCH_NAME_KEYWORD);
-					Loggers.ACTIVITIES.debug(String.format("%s: Found filter named 'branch'. Build will be requested against branch '%s'. buildType='%s', triggerName='%s', branchName='%s', triggerId='%s'", LOGGING_PREFIX, branchName, buildTypeExternalId, trigger.getTriggerName(), branchName, trigger.getId()));
+					Loggers.TRIGGERS.debug(String.format("%s: Found filter named 'branch'. Build will be requested against branch '%s'. buildType='%s', triggerName='%s', branchName='%s', triggerId='%s'", LOGGING_PREFIX, branchName, buildTypeExternalId, trigger.getTriggerName(), branchName, trigger.getId()));
 					buildCustomiser.setDesiredBranchName(branchName);
 				
 				// If we've not found a trigger, try looking for a parameter named "branch".
 				} else if (resolvedParameters.containsKey(Constants.BRANCH_NAME_KEYWORD)) {
 					String branchName = resolvedParameters.get(Constants.BRANCH_NAME_KEYWORD);
-					Loggers.ACTIVITIES.debug(String.format("%s: Found parameter named 'branch'. Build will be requested against branch '%s'. buildType='%s', triggerName='%s', branchName='%s', triggerId='%s'", LOGGING_PREFIX, branchName, buildTypeExternalId, trigger.getTriggerName(), branchName, trigger.getId()));
+					Loggers.TRIGGERS.debug(String.format("%s: Found parameter named 'branch'. Build will be requested against branch '%s'. buildType='%s', triggerName='%s', branchName='%s', triggerId='%s'", LOGGING_PREFIX, branchName, buildTypeExternalId, trigger.getTriggerName(), branchName, trigger.getId()));
 					buildCustomiser.setDesiredBranchName(branchName);
 				
 				// Else. don't try to set the branch to build. We will therefore build the <default> branch.
 				} else {
-					Loggers.ACTIVITIES.debug(String.format("%s: No filter or parameter named 'branch' found. Build will be requested against the 'default' branch. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
+					Loggers.TRIGGERS.debug(String.format("%s: No filter or parameter named 'branch' found. Build will be requested against the 'default' branch. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 				}
 				
 				String commitId = null;
@@ -109,7 +109,7 @@ public class BuildTriggerHandlerService {
 
 				// Else. don't try to set the commit to build. We will therefore build the latest commit on the branch.
 				} else {
-					Loggers.ACTIVITIES.debug(String.format("%s: No filter or parameter named 'commit' found. Build will be requested against the latest commit on the branch. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
+					Loggers.TRIGGERS.debug(String.format("%s: No filter or parameter named 'commit' found. Build will be requested against the latest commit on the branch. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 					queueBuild(buildTypeExternalId, trigger, buildCustomiser);
 				}
 			
@@ -123,26 +123,26 @@ public class BuildTriggerHandlerService {
 						}
 					}
 					if (foundModification != null) {
-						Loggers.ACTIVITIES.debug(String.format("%s: Found specific modifcation in VCS for commit '%s'. Build will be triggered against this commit. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));	
+						Loggers.TRIGGERS.debug(String.format("%s: Found specific modifcation in VCS for commit '%s'. Build will be triggered against this commit. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));	
 						buildCustomiser.setChangesUpTo(foundModification);
 						queueBuild(buildTypeExternalId, trigger, buildCustomiser);
 					} else {
-						Loggers.ACTIVITIES.info(String.format("%s: No modifcation found in VCS for commit '%s'. Build will not be triggered. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
+						Loggers.TRIGGERS.info(String.format("%s: No modifcation found in VCS for commit '%s'. Build will not be triggered. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 						continue;
 					}
 				}
 				
 			} else {
-				Loggers.ACTIVITIES.info(String.format("%s: Build not queued by Webhook Trigger processing. Trigger filters did not match webhook payload content. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
+				Loggers.TRIGGERS.info(String.format("%s: Build not queued by Webhook Trigger processing. Trigger filters did not match webhook payload content. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 			}
-			Loggers.ACTIVITIES.debug(String.format("%s: Completed Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
+			Loggers.TRIGGERS.debug(String.format("%s: Completed Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 		}
 	}
 
 	private SQueuedBuild queueBuild(String buildTypeExternalId, BuildTriggerDescriptor trigger, BuildCustomizer buildCustomiser) {
 		// Now queue the build, and set a comment that says we triggered it.
 		SQueuedBuild queuedBuild = buildCustomiser.createPromotion().addToQueue(Constants.PLUGIN_DESCRIPTION);
-		Loggers.ACTIVITIES.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId()));
+		Loggers.TRIGGERS.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId()));
 		return queuedBuild;
 	}
 
@@ -150,7 +150,7 @@ public class BuildTriggerHandlerService {
 		ResolvedValuesHolder resolvedValuesHolder = new ResolvedValuesHolder();
 		
 		if (parameterDefinitions.isEmpty()) {
-			Loggers.ACTIVITIES.debug(LOGGING_PREFIX + ": No parameters defined. Skipping parameter resolution and validation.");
+			Loggers.TRIGGERS.debug(LOGGING_PREFIX + ": No parameters defined. Skipping parameter resolution and validation.");
 		}
 		for (TriggerParameterDefinition parameterDefinition : parameterDefinitions) {
 			final String name = parameterDefinition.getName();
@@ -166,7 +166,7 @@ public class BuildTriggerHandlerService {
 			// We've done our best to populate the value. If it's still unpopulated and is required, 
 			// we fail here. We shouldn't trigger the build if a required value is not resolved.
 			if (Boolean.TRUE.equals(parameterDefinition.getRequired() && StringUtils.isEmpty(value))) {
-				Loggers.ACTIVITIES.debug(
+				Loggers.TRIGGERS.debug(
 						String.format("%s: Required parameter is not resolved. Build will not be triggered. name='%s', value='%s'", 
 								LOGGING_PREFIX, name, value));
 				resolvedValuesHolder.setParametersAreValid(false);
@@ -174,13 +174,13 @@ public class BuildTriggerHandlerService {
 			// If it's not resolved, but is also not required, we will still allow the build to run, but we won't define the 
 			// parameter. If the parameter is defined on the build, we won't be overwriting it.
 			} else if (StringUtils.isEmpty(value)){
-				Loggers.ACTIVITIES.debug(
+				Loggers.TRIGGERS.debug(
 						String.format("%s: Parameter is not resolved. Parameter will not be passed to the build. name='%s', value='%s'", 
 								LOGGING_PREFIX, name, value));
 			
 			// Else, the parameter is good. Set it to pass to the build.
 			} else {
-				Loggers.ACTIVITIES.debug(
+				Loggers.TRIGGERS.debug(
 						String.format("%s: Parameter is resolved. Parameter will be passed to the build. name='%s', value='%s'", 
 								LOGGING_PREFIX, name, value));
 				resolvedValuesHolder.addParameter(name, value);
@@ -188,7 +188,7 @@ public class BuildTriggerHandlerService {
 		}
 		
 		if (filters.isEmpty()) {
-			Loggers.ACTIVITIES.debug(LOGGING_PREFIX + ": No filters defined. Skipping regex validation.");
+			Loggers.TRIGGERS.debug(LOGGING_PREFIX + ": No filters defined. Skipping regex validation.");
 		}
 		for (TriggerFilterDefinition filterEntry : filters) {
 			final String name = filterEntry.getName();
@@ -202,17 +202,17 @@ public class BuildTriggerHandlerService {
 				if (m.groupCount() > 0) {
 					for (int i = 0; i <= m.groupCount(); i++) {
 						resolvedValuesHolder.addParameter(name + "_" + String.valueOf(i), m.group(i));
-						Loggers.ACTIVITIES.debug(
+						Loggers.TRIGGERS.debug(
 							String.format("%s: Regex group match found. Adding parameter='%s', value='%s', regex='%s', input='%s'", 
 									LOGGING_PREFIX, name + "_" + String.valueOf(i), m.group(i), regex, resolvedFilter));
 					}
 				}
 				resolvedValuesHolder.addTrigger(name, resolvedFilter);
-				Loggers.ACTIVITIES.debug(
+				Loggers.TRIGGERS.debug(
 						String.format("%s: Regex match found. name='%s', regex='%s', value='%s'", 
 								LOGGING_PREFIX, name, regex, resolvedFilter));
 			} else {
-				Loggers.ACTIVITIES.debug(
+				Loggers.TRIGGERS.debug(
 						String.format("%s: No regex match found. name='%s', regex='%s', value='%s'", 
 								LOGGING_PREFIX, name, regex, resolvedFilter));
 				resolvedValuesHolder.setTriggersAreValid(false);

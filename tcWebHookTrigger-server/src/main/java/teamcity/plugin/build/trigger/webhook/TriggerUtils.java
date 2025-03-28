@@ -36,7 +36,7 @@ public class TriggerUtils {
 							try {
 								BeanUtils.setProperty(definition, p, value);
 							} catch (IllegalAccessException | InvocationTargetException e) {
-								Loggers.ACTIVITIES.warn(String.format("Failed to set definition '%s' to value '%s'. Full string was '%s'", p, value, line));
+								Loggers.TRIGGERS.warn(String.format("Failed to set definition '%s' to value '%s'. Full string was '%s'", p, value, line));
 							}
 						}
 					}
@@ -66,7 +66,7 @@ public class TriggerUtils {
 							try {
 								BeanUtils.setProperty(definition, p, value);
 							} catch (IllegalAccessException | InvocationTargetException e) {
-								Loggers.ACTIVITIES.warn(String.format("Failed to set trigger '%s' to value '%s'. Full string was '%s'", p, value, line));
+								Loggers.TRIGGERS.warn(String.format("Failed to set trigger '%s' to value '%s'. Full string was '%s'", p, value, line));
 							}
 						}
 					}

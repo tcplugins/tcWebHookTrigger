@@ -26,7 +26,7 @@ public class BuildTriggerResolverService {
 	public TriggersHolder findTriggersForBuildType(String buildTypeExternalId) throws BuildTypeNotFoundException, PermissionedDeniedException {
 		try {
 			SBuildType sBuildType = myProjectManager.findBuildTypeByExternalId(buildTypeExternalId);
-			Loggers.ACTIVITIES.debug(String.format("%s: Found matching SBuildType. buildType='%s'", LOGGING_PREFIX, buildTypeExternalId));
+			Loggers.TRIGGERS.debug(String.format("%s: Found matching SBuildType. buildType='%s'", LOGGING_PREFIX, buildTypeExternalId));
 			if (sBuildType == null) {
 				throw new BuildTypeNotFoundException(buildTypeExternalId);
 			}
