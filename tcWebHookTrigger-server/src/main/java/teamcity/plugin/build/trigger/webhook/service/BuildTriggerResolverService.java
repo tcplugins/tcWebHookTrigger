@@ -32,7 +32,7 @@ public class BuildTriggerResolverService {
 			}
 			Collection<BuildTriggerDescriptor> buildTriggers = sBuildType.getBuildTriggersCollection();
 			return new TriggersHolder(sBuildType,buildTriggers.stream()
-					.filter(trigger -> WebHookBuildTriggerService.WEBHOOK_BUILD_TRIGGER_NAME.equals(trigger.getBuildTriggerService().getName()))
+					.filter(trigger -> WebHookBuildTriggerService.WEBHOOK_BUILD_TRIGGER_NAME.equals(trigger.getBuildTriggerService().getName()) && sBuildType.isEnabled(trigger.getId()))
 					.collect(Collectors.toList()));
 		} catch (AccessDeniedException ex) {
 			throw new PermissionedDeniedException(ex);
