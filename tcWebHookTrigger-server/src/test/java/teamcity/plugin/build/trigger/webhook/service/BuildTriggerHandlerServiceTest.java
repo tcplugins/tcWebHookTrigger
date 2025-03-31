@@ -1,5 +1,6 @@
 package teamcity.plugin.build.trigger.webhook.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.Before;
@@ -155,6 +157,19 @@ public class BuildTriggerHandlerServiceTest {
 		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(null));
 	}
 	@Test
+	public void testCallsBuildCustomizerFactoryWhenTriggersAreFoundWithNegativeRegexFilters() throws Exception {
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
+		jsonToPropertiesParser = new JsonToPropertiesParser();
+		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
+				TriggerParameters.PATH_MAPPINGS, "name=action::required=true::path=$.action",
+				TriggerParameters.FILTERS, "name=action::template=${action}::regex=^(?!.*(closed|review_requested|review_request_removed|enqueued|dequeued)).*$"));
+		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, null)).thenReturn(buildCustomizer);
+		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx);
+		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, "{ 'action': 'checks_requested' }");
+		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(null));
+	}
+	@Test
 	public void testDoesNotCallBuildCustomizerFactoryWhenTriggersAreFoundButFiltersDontMatch() throws Exception {
 		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		when(triggerDescriptor.getProperties()).thenReturn(ImmutableMap.of(
@@ -210,6 +225,41 @@ public class BuildTriggerHandlerServiceTest {
 		assertFalse(Pattern.matches(regex, "Fre"));
 		assertFalse(Pattern.matches(regex, "Friend"));
 		assertFalse(Pattern.matches(regex, "Freddy"));
+	}
+	
+	@Test
+	public void testMatcherWithNegativeRegex() {
+		final String regex = "^(?!.*(closed|review_requested|review_request_removed|enqueued|dequeued)).*$";
+		assertFalse(Pattern.matches(regex, "closed"));
+		assertFalse(Pattern.matches(regex, "review_requested"));
+		assertFalse(Pattern.matches(regex, "review_request_removed"));
+		assertFalse(Pattern.matches(regex, "enqueued"));
+		assertFalse(Pattern.matches(regex, "dequeued"));
+		
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher("opened"); 
+		assertTrue(m.matches());
+		assertEquals(1, m.groupCount());
+		assertEquals("opened", m.group(0));
+		assertEquals(null, m.group(1));
+	}
+	
+	@Test
+	public void testMatcherWithPositiveRegex() {
+		final String regex = "^(.*(closed|review_requested|review_request_removed|enqueued|dequeued)).*$";
+		assertTrue(Pattern.matches(regex, "closed"));
+		assertTrue(Pattern.matches(regex, "review_requested"));
+		assertTrue(Pattern.matches(regex, "review_request_removed"));
+		assertTrue(Pattern.matches(regex, "enqueued"));
+		assertTrue(Pattern.matches(regex, "dequeued"));
+		
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher("closed"); 
+		assertTrue(m.matches());
+		assertEquals(2, m.groupCount());
+		assertEquals("closed", m.group(0));
+		assertEquals("closed", m.group(1));
+		assertEquals("closed", m.group(2));
 	}
 
 }
