@@ -18,25 +18,28 @@ import teamcity.plugin.rest.core.Loggers;
 import teamcity.plugin.rest.core.controller.BaseRestApiController;
 
 @RestController
-@RequestMapping(value = { REST_PREFIX, APP_REST_PREFIX}, produces = { MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+@RequestMapping(value = { REST_PREFIX, APP_REST_PREFIX }, produces = { MediaType.APPLICATION_XML_VALUE,
+		MediaType.APPLICATION_JSON_VALUE })
 public class WebHookTriggerRestController extends BaseRestApiController {
 
 	private BuildTriggerHandlerService myBuildTriggerHandlerService;
 	private UserProviderService myUserProviderService;
 
-    public WebHookTriggerRestController(
-    		BuildTriggerHandlerService buildTriggerHandlerService,
-    		UserProviderService userProviderService) {
+	public WebHookTriggerRestController(
+			BuildTriggerHandlerService buildTriggerHandlerService,
+			UserProviderService userProviderService) {
 		this.myBuildTriggerHandlerService = buildTriggerHandlerService;
 		this.myUserProviderService = userProviderService;
-    	Loggers.SERVER.info("PluginsApi :: WebHookTriggerRestController controller starting");
+		Loggers.SERVER.info("PluginsApi :: WebHookTriggerRestController controller starting");
 	}
-    
-    @PostMapping("/{buildTypeExternalId}")
-    public ResponseEntity<String> handleWebHookTriggerForBuild(@PathVariable String buildTypeExternalId,  @RequestBody String payload) {
+
+	@PostMapping("/{buildTypeExternalId}")
+	public ResponseEntity<String> handleWebHookTriggerForBuild(
+			@PathVariable String buildTypeExternalId,
+			@RequestBody String payload) {
 		AuthorityHolder user = myUserProviderService.getAuthorityHolder();
 		myBuildTriggerHandlerService.handleWebHook(user, buildTypeExternalId, payload);
 		return ResponseEntity.accepted().build();
-    }
-    
+	}
+
 }

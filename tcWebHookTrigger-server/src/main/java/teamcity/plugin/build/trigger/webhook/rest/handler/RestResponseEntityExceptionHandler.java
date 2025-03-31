@@ -1,4 +1,5 @@
 package teamcity.plugin.build.trigger.webhook.rest.handler;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,16 +17,15 @@ import teamcity.plugin.rest.core.handler.CoreRestResponseEntityExceptionHandler.
 
 @ControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
-	
+
 	public RestResponseEntityExceptionHandler() {
 		Loggers.SERVER.info("RestResponseEntityExceptionHandler :: Starting");
 	}
- 
-    @ExceptionHandler(value = { BuildTypeNotFoundException.class, PermissionedDeniedException.class, UnparsablePayloadException.class })
-    public ResponseEntity<Object> handleServerStop(WebException ex, WebRequest request) {
-    	return handleExceptionInternal(ex, 
-    			new Error(ex.getStatusCode(), ex.getMessage()),
-    			new HttpHeaders(), HttpStatus.valueOf(ex.getStatusCode()), request);
-    }
+
+	@ExceptionHandler(value = { BuildTypeNotFoundException.class, PermissionedDeniedException.class, UnparsablePayloadException.class })
+	public ResponseEntity<Object> handleServerStop(WebException ex, WebRequest request) {
+		return handleExceptionInternal(ex, new Error(ex.getStatusCode(), ex.getMessage()), new HttpHeaders(),
+				HttpStatus.valueOf(ex.getStatusCode()), request);
+	}
 
 }
