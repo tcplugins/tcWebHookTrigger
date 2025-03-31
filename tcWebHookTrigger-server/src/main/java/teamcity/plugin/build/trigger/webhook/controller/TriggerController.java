@@ -14,6 +14,7 @@ import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
 import jetbrains.buildServer.web.util.SessionUser;
+import teamcity.plugin.build.trigger.webhook.Loggers;
 import teamcity.plugin.build.trigger.webhook.exception.BuildTypeNotFoundException;
 import teamcity.plugin.build.trigger.webhook.exception.PermissionedDeniedException;
 import teamcity.plugin.build.trigger.webhook.exception.UnparsablePayloadException;
@@ -57,6 +58,9 @@ public class TriggerController extends BaseController {
 			} catch (BuildTypeNotFoundException | PermissionedDeniedException | UnparsablePayloadException ex) {
 				response.sendError(ex.getStatusCode(), ex.getMessage());
 				return null;
+			} catch (Exception ex) {
+				Loggers.TRIGGERS.warn("An error occured processing the trigger request.", ex);
+				response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "An error occured processing the trigger request. See 'teamcity-triggers.log' on the server.");
 			}
 		}
 		response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "WebHooks must be POSTed");
