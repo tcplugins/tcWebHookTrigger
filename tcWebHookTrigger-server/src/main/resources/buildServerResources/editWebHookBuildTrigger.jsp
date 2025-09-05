@@ -52,3 +52,13 @@
         <span class="error" id="error_<%=TriggerParameters.INCLUDE_WHOLE_PAYLOAD%>"></span>
     </td>
 </tr>
+<tr class="noBorder" >
+    <th><label for="<%=TriggerParameters.TOP_OF_QUEUE%>">Top of Queue: </label></th>
+    <td>
+       <props:checkboxProperty name="<%=TriggerParameters.TOP_OF_QUEUE%>"/>
+      <span class="smallNote">
+          Whether to move the triggered build to the top of the queue.
+      </span>
+        <span class="error" id="error_<%=TriggerParameters.TOP_OF_QUEUE%>"></span>
+    </td>
+</tr>

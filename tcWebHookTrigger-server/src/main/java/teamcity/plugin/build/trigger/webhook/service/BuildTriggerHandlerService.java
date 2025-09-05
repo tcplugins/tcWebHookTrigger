@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import jetbrains.buildServer.buildTriggers.BuildTriggerDescriptor;
 import jetbrains.buildServer.serverSide.BuildCustomizer;
 import jetbrains.buildServer.serverSide.BuildCustomizerFactory;
+import jetbrains.buildServer.serverSide.BuildQueue;
 import jetbrains.buildServer.serverSide.SQueuedBuild;
 import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
@@ -36,17 +37,20 @@ public class BuildTriggerHandlerService {
 	private JsonToPropertiesParser myJsonToPropertiesParser;
 	private BuildCustomizerFactory myBuildCustomizerFactory;
 	private VcsModificationHistoryEx myVcsModificationHistoryEx;
+	private BuildQueue myBuildQueue;
 
 	public BuildTriggerHandlerService(
 			BuildTriggerResolverService buildTriggerResolverService,
 			JsonToPropertiesParser jsonToPropertiesParser,
 			BuildCustomizerFactory buildCustomizerFactory,
-			VcsModificationHistoryEx vcsModificationHistoryEx
+			VcsModificationHistoryEx vcsModificationHistoryEx,
+			BuildQueue buildQueue
 			) {
 		myBuildTriggerResolverService = buildTriggerResolverService;
 		myJsonToPropertiesParser = jsonToPropertiesParser;
 		myBuildCustomizerFactory = buildCustomizerFactory;
 		myVcsModificationHistoryEx = vcsModificationHistoryEx;
+		myBuildQueue = buildQueue;
 	}
 
 	public void handleWebHook(AuthorityHolder user, String buildTypeExternalId, String payload) {
@@ -80,6 +84,8 @@ public class BuildTriggerHandlerService {
 				
 				buildCustomiser.setParameters(customParameters);
 				
+				boolean moveToTopOfQueue = Boolean.parseBoolean(trigger.getProperties().get(TriggerParameters.TOP_OF_QUEUE));
+				
 				// Look for a trigger named "branch". If defined, build that branch.
 				if (valuesHolder.getResolvedTriggers().containsKey(Constants.BRANCH_NAME_KEYWORD)) {
 					String branchName = valuesHolder.getResolvedTriggers().get(Constants.BRANCH_NAME_KEYWORD);
@@ -109,7 +115,7 @@ public class BuildTriggerHandlerService {
 				// Else. don't try to set the commit to build. We will therefore build the latest commit on the branch.
 				} else {
 					Loggers.TRIGGERS.debug(String.format("%s: No filter or parameter named 'commit' found. Build will be requested against the latest commit on the branch. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
-					queueBuild(buildTypeExternalId, trigger, buildCustomiser);
+					queueBuild(buildTypeExternalId, trigger, buildCustomiser, moveToTopOfQueue);
 				}
 			
 				if (commitId != null) {
@@ -124,7 +130,7 @@ public class BuildTriggerHandlerService {
 					if (foundModification != null) {
 						Loggers.TRIGGERS.debug(String.format("%s: Found specific modifcation in VCS for commit '%s'. Build will be triggered against this commit. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));	
 						buildCustomiser.setChangesUpTo(foundModification);
-						queueBuild(buildTypeExternalId, trigger, buildCustomiser);
+						queueBuild(buildTypeExternalId, trigger, buildCustomiser, moveToTopOfQueue);
 					} else {
 						Loggers.TRIGGERS.info(String.format("%s: No modifcation found in VCS for commit '%s'. Build will not be triggered. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 						continue;
@@ -138,9 +144,12 @@ public class BuildTriggerHandlerService {
 		}
 	}
 
-	private SQueuedBuild queueBuild(String buildTypeExternalId, BuildTriggerDescriptor trigger, BuildCustomizer buildCustomiser) {
+	private SQueuedBuild queueBuild(String buildTypeExternalId, BuildTriggerDescriptor trigger, BuildCustomizer buildCustomiser, boolean moveToTopOfQueue) {
 		// Now queue the build, and set a comment that says we triggered it.
 		SQueuedBuild queuedBuild = buildCustomiser.createPromotion().addToQueue(Constants.PLUGIN_DESCRIPTION);
+		if (moveToTopOfQueue) {
+			myBuildQueue.moveTop(queuedBuild.getItemId());
+		}
 		Loggers.TRIGGERS.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId()));
 		return queuedBuild;
 	}

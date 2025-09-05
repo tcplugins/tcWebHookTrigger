@@ -8,6 +8,7 @@ public class TriggerParameters {
 	public static final String PATH_MAPPINGS = "webhook.build.trigger.path.mappings";
 	public static final String FILTERS = "webhook.build.trigger.path.filters";
 	public static final String INCLUDE_WHOLE_PAYLOAD = "webhook.build.trigger.include.payload";
+	public static final String TOP_OF_QUEUE = "webhook.build.trigger.top.of.queue";
 	
 	@NotNull
 	private String myPathMappings;
@@ -15,11 +16,14 @@ public class TriggerParameters {
 	private String myFilters;
 	@Nullable
 	private Boolean myIncludePayload;
+	@Nullable
+	private Boolean myTopOfQueue;
 
-	public TriggerParameters(@NotNull String pathMappings, @Nullable String filters, @Nullable Boolean includePayload) {
+	public TriggerParameters(@NotNull String pathMappings, @Nullable String filters, @Nullable Boolean includePayload, @Nullable Boolean topOfQueue) {
 		myPathMappings = pathMappings;
 		myFilters = filters;
 		myIncludePayload = includePayload;
+		myTopOfQueue = topOfQueue;
 	}
 
 	@NotNull
@@ -47,5 +51,14 @@ public class TriggerParameters {
 
 	public void setIncludePayload(Boolean includePayload) {
 		this.myIncludePayload = includePayload;
+	}
+	
+	@Nullable
+	public Boolean getTopOfQueue() {
+		return myTopOfQueue;
+	}
+	
+	public void setTopOfQueue(Boolean topOfQueue) {
+		this.myTopOfQueue = topOfQueue;
 	}
 }
