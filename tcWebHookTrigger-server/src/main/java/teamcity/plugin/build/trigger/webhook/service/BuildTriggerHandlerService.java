@@ -150,7 +150,7 @@ public class BuildTriggerHandlerService {
 		if (moveToTopOfQueue) {
 			myBuildQueue.moveTop(queuedBuild.getItemId());
 		}
-		Loggers.TRIGGERS.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId()));
+		Loggers.TRIGGERS.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s', moveToTopOfQueue='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId(), moveToTopOfQueue));
 		return queuedBuild;
 	}
 
