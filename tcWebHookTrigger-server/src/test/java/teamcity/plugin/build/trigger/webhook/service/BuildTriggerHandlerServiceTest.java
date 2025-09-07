@@ -30,6 +30,7 @@ import jetbrains.buildServer.serverSide.BuildCustomizerFactory;
 import jetbrains.buildServer.serverSide.BuildPromotion;
 import jetbrains.buildServer.serverSide.BuildQueue;
 import jetbrains.buildServer.serverSide.SBuildType;
+import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.SQueuedBuild;
 import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
@@ -47,6 +48,7 @@ import teamcity.plugin.build.trigger.webhook.service.BuildTriggerResolverService
 public class BuildTriggerHandlerServiceTest {
 
 	private static final String MY_TEST_BUILD_EXTERNAL_ID = "MyTestBuildId";
+	private static final String MY_TEST_PROJECT_EXTERNAL_ID = "MyProjectId";
 	private static final String MY_TEST_PROJECT_INTERNAL_ID = "project1";
 	private static final String MY_TEST_BUILD_INTERNAL_ID = "build01";
 	private static final String TEST_DEFINITION_01 = "name=foo::required=true::defaultValue=bar::path=$.foo.bar";
@@ -82,6 +84,9 @@ public class BuildTriggerHandlerServiceTest {
 	
 	@Mock
 	SQueuedBuild sQueuedBuild;
+	
+	@Mock
+	SProject sProject;
 
 	@Mock BuildTriggerDescriptor triggerDescriptor;
 	
@@ -99,10 +104,14 @@ public class BuildTriggerHandlerServiceTest {
 		when(triggerDescriptor.getId()).thenReturn(UUID.randomUUID().toString());
 		when(triggerDescriptor.getTriggerName()).thenReturn(WebHookBuildTriggerService.WEBHOOK_BUILD_TRIGGER_NAME);
 		lenient().when(currentUser.isPermissionGrantedForProject(MY_TEST_PROJECT_INTERNAL_ID, Permission.RUN_BUILD)).thenReturn(true);
+		lenient().when(currentUser.isPermissionGrantedForProject(MY_TEST_PROJECT_INTERNAL_ID, Permission.REORDER_BUILD_QUEUE)).thenReturn(true);
 		lenient().when(currentUser.getPermissionsGrantedForProject(MY_TEST_BUILD_EXTERNAL_ID)).thenReturn(Permissions.NO_PERMISSIONS);
-		lenient().when(currentUser.getPermissionsGrantedForProject(MY_TEST_BUILD_INTERNAL_ID)).thenReturn(Permissions.NO_PERMISSIONS);
 		lenient().when(sBuildType.getExternalId()).thenReturn(MY_TEST_BUILD_EXTERNAL_ID);
+		lenient().when(currentUser.getAssociatedUser()).thenReturn(user);
+		lenient().when(user.getUsername()).thenReturn("myusername");
 		lenient().when(sBuildType.getProjectId()).thenReturn(MY_TEST_PROJECT_INTERNAL_ID);
+		lenient().when(sBuildType.getProject()).thenReturn(sProject);
+		lenient().when(sProject.getExternalId()).thenReturn(MY_TEST_PROJECT_EXTERNAL_ID);
 	}
 	
 	@Test
@@ -143,6 +152,20 @@ public class BuildTriggerHandlerServiceTest {
 		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, testJsonString);
 		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(null));
 		verify(buildQueue).moveTop(sQueuedBuild.getItemId());
+	}
+	@Test
+	public void testDoesNotCallMoveTopWhenMoveToTopIsEnabledButNotPermissioned() throws Exception {
+		// Disable re-order permission for this test
+		when(currentUser.isPermissionGrantedForProject(MY_TEST_PROJECT_INTERNAL_ID, Permission.REORDER_BUILD_QUEUE)).thenReturn(false);
+		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
+		when(triggerDescriptor.getProperties()).thenReturn(
+				ImmutableMap.of(TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_01, TriggerParameters.TOP_OF_QUEUE, "true"));
+		when(buildCustomizerFactory.createBuildCustomizer(sBuildType, null)).thenReturn(buildCustomizer);
+		when(buildTriggerResolverService.findTriggersForBuildType(buildTypeExternalId)).thenReturn(new TriggersHolder(sBuildType, Collections.singletonList(triggerDescriptor)));
+		BuildTriggerHandlerService triggerHandlerService = new BuildTriggerHandlerService(buildTriggerResolverService, jsonToPropertiesParser, buildCustomizerFactory, vcsModificationHistoryEx, buildQueue);
+		triggerHandlerService.handleWebHook(currentUser, buildTypeExternalId, testJsonString);
+		verify(buildCustomizerFactory, times(1)).createBuildCustomizer(any(), eq(null));
+		verify(buildQueue, times(0)).moveTop(sQueuedBuild.getItemId());
 	}
 	@Test
 	public void testDoesNotCallMoveTopWhenMoveToTopIsDisabled() throws Exception {

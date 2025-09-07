@@ -12,6 +12,7 @@ import jetbrains.buildServer.buildTriggers.BuildTriggerDescriptor;
 import jetbrains.buildServer.serverSide.BuildCustomizer;
 import jetbrains.buildServer.serverSide.BuildCustomizerFactory;
 import jetbrains.buildServer.serverSide.BuildQueue;
+import jetbrains.buildServer.serverSide.SBuildType;
 import jetbrains.buildServer.serverSide.SQueuedBuild;
 import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
@@ -115,7 +116,7 @@ public class BuildTriggerHandlerService {
 				// Else. don't try to set the commit to build. We will therefore build the latest commit on the branch.
 				} else {
 					Loggers.TRIGGERS.debug(String.format("%s: No filter or parameter named 'commit' found. Build will be requested against the latest commit on the branch. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
-					queueBuild(buildTypeExternalId, trigger, buildCustomiser, moveToTopOfQueue);
+					queueBuild(user, triggersHolder.getsBuildType(), trigger, buildCustomiser, moveToTopOfQueue);
 				}
 			
 				if (commitId != null) {
@@ -130,7 +131,7 @@ public class BuildTriggerHandlerService {
 					if (foundModification != null) {
 						Loggers.TRIGGERS.debug(String.format("%s: Found specific modifcation in VCS for commit '%s'. Build will be triggered against this commit. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));	
 						buildCustomiser.setChangesUpTo(foundModification);
-						queueBuild(buildTypeExternalId, trigger, buildCustomiser, moveToTopOfQueue);
+						queueBuild(user, triggersHolder.getsBuildType(), trigger, buildCustomiser, moveToTopOfQueue);
 					} else {
 						Loggers.TRIGGERS.info(String.format("%s: No modifcation found in VCS for commit '%s'. Build will not be triggered. buildType='%s', triggerName='%s', triggerId='%s'", LOGGING_PREFIX, commitId, buildTypeExternalId, trigger.getTriggerName(), trigger.getId()));
 						continue;
@@ -144,13 +145,21 @@ public class BuildTriggerHandlerService {
 		}
 	}
 
-	private SQueuedBuild queueBuild(String buildTypeExternalId, BuildTriggerDescriptor trigger, BuildCustomizer buildCustomiser, boolean moveToTopOfQueue) {
+	private SQueuedBuild queueBuild(AuthorityHolder user, SBuildType buildType, BuildTriggerDescriptor trigger, BuildCustomizer buildCustomiser, boolean moveToTopOfQueue) {
 		// Now queue the build, and set a comment that says we triggered it.
 		SQueuedBuild queuedBuild = buildCustomiser.createPromotion().addToQueue(Constants.PLUGIN_DESCRIPTION);
 		if (moveToTopOfQueue) {
-			myBuildQueue.moveTop(queuedBuild.getItemId());
+			if (user.isPermissionGrantedForProject(buildType.getProjectId(), Permission.REORDER_BUILD_QUEUE)) {
+				myBuildQueue.moveTop(queuedBuild.getItemId());
+			} else {
+				Loggers.TRIGGERS.warn(String.format("%s: REORDER_BUILD_QUEUE permission is not granted for user '%s' on project '%s'. "
+						+ "Build will not be moved to the top of the queue. "
+						+ "buildType='%s', triggerName='%s', triggerId='%s', buildId='%s'", 
+						LOGGING_PREFIX, user.getAssociatedUser().getUsername(), buildType.getProject().getExternalId(), 
+						buildType.getExternalId(), trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId()));
+			}
 		}
-		Loggers.TRIGGERS.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s', moveToTopOfQueue='%s'", LOGGING_PREFIX, buildTypeExternalId, trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId(), moveToTopOfQueue));
+		Loggers.TRIGGERS.info(String.format("%s: Build queued by Webhook Trigger processing. buildType='%s', triggerName='%s', triggerId='%s', buildId='%s', moveToTopOfQueue='%s'", LOGGING_PREFIX, buildType.getExternalId(), trigger.getTriggerName(), trigger.getId(), queuedBuild.getItemId(), moveToTopOfQueue));
 		return queuedBuild;
 	}
 
@@ -217,10 +226,10 @@ public class BuildTriggerHandlerService {
 				if (m.groupCount() > 0) {
 					for (int i = 0; i <= m.groupCount(); i++) {
 						if (m.group(i) != null) {
-							resolvedValuesHolder.addParameter(name + "_" + String.valueOf(i), m.group(i));
+							resolvedValuesHolder.addParameter(name + "_" + i, m.group(i));
 							Loggers.TRIGGERS.debug(String.format(
 									"%s: Regex group match found. Adding parameter='%s', value='%s', regex='%s', input='%s'",
-									LOGGING_PREFIX, name + "_" + String.valueOf(i), m.group(i), regex,
+									LOGGING_PREFIX, name + "_" + i, m.group(i), regex, 
 									resolvedFilter));
 						}
 					}
