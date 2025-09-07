@@ -16,7 +16,6 @@
 	<context:component-scan base-package="teamcity.plugin.build.trigger.webhook.rest"/>
  	<mvc:annotation-driven/>
  	
-    <bean class="teamcity.plugin.build.trigger.webhook.controller.TriggerController"/>
     <bean class="teamcity.plugin.build.trigger.webhook.service.BuildTriggerResolverService"/>
     <bean class="teamcity.plugin.build.trigger.webhook.service.BuildTriggerHandlerService"/>
     <bean class="teamcity.plugin.build.trigger.webhook.parser.JsonToPropertiesParser"/>
