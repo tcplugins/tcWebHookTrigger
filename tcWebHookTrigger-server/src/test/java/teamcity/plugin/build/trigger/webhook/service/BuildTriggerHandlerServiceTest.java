@@ -105,6 +105,7 @@ public class BuildTriggerHandlerServiceTest {
 		when(triggerDescriptor.getTriggerName()).thenReturn(WebHookBuildTriggerService.WEBHOOK_BUILD_TRIGGER_NAME);
 		lenient().when(currentUser.isPermissionGrantedForProject(MY_TEST_PROJECT_INTERNAL_ID, Permission.RUN_BUILD)).thenReturn(true);
 		lenient().when(currentUser.isPermissionGrantedForProject(MY_TEST_PROJECT_INTERNAL_ID, Permission.REORDER_BUILD_QUEUE)).thenReturn(true);
+		lenient().when(currentUser.isPermissionGrantedGlobally(Permission.REORDER_BUILD_QUEUE)).thenReturn(true);
 		lenient().when(currentUser.getPermissionsGrantedForProject(MY_TEST_BUILD_EXTERNAL_ID)).thenReturn(Permissions.NO_PERMISSIONS);
 		lenient().when(sBuildType.getExternalId()).thenReturn(MY_TEST_BUILD_EXTERNAL_ID);
 		lenient().when(currentUser.getAssociatedUser()).thenReturn(user);
@@ -157,6 +158,7 @@ public class BuildTriggerHandlerServiceTest {
 	public void testDoesNotCallMoveTopWhenMoveToTopIsEnabledButNotPermissioned() throws Exception {
 		// Disable re-order permission for this test
 		when(currentUser.isPermissionGrantedForProject(MY_TEST_PROJECT_INTERNAL_ID, Permission.REORDER_BUILD_QUEUE)).thenReturn(false);
+		when(currentUser.isPermissionGrantedGlobally(Permission.REORDER_BUILD_QUEUE)).thenReturn(false);
 		String buildTypeExternalId = MY_TEST_BUILD_EXTERNAL_ID;
 		when(triggerDescriptor.getProperties()).thenReturn(
 				ImmutableMap.of(TriggerParameters.PATH_MAPPINGS, TEST_DEFINITION_01, TriggerParameters.TOP_OF_QUEUE, "true"));

@@ -149,7 +149,7 @@ public class BuildTriggerHandlerService {
 		// Now queue the build, and set a comment that says we triggered it.
 		SQueuedBuild queuedBuild = buildCustomiser.createPromotion().addToQueue(Constants.PLUGIN_DESCRIPTION);
 		if (moveToTopOfQueue) {
-			if (user.isPermissionGrantedForProject(buildType.getProjectId(), Permission.REORDER_BUILD_QUEUE)) {
+			if (user.isPermissionGrantedForProject(buildType.getProjectId(), Permission.REORDER_BUILD_QUEUE) || user.isPermissionGrantedGlobally(Permission.REORDER_BUILD_QUEUE)) {
 				myBuildQueue.moveTop(queuedBuild.getItemId());
 			} else {
 				Loggers.TRIGGERS.warn(String.format("%s: REORDER_BUILD_QUEUE permission is not granted for user '%s' on project '%s'. "
